@@ -11,6 +11,7 @@ const systemRouter = require('./system');
 const processesRouter = require('./processes');
 const wifiRouter = require('./wifi');
 const setupTerminal = require('./terminal');
+const setupStatsWs = require('./statsWs');
 const startCollector = require('./collector');
 const { requireAuth } = require('./middleware');
 
@@ -33,8 +34,9 @@ app.use('/api/system', requireAuth, systemRouter);
 app.use('/api/processes', requireAuth, processesRouter);
 app.use('/api/wifi', requireAuth, wifiRouter);
 
-// Attach WebSocket terminal to the HTTP server
+// Attach WebSockets to the HTTP server
 setupTerminal(server);
+setupStatsWs(server);
 
 // In production, serve the built React app
 if (IS_PROD) {

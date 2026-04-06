@@ -5,7 +5,7 @@ A self-hosted web dashboard for Raspberry Pi devices. Monitor system health, vie
 ## Features
 
 - **Login** — session-gated access via username/password, JWT stored as an httpOnly cookie
-- **System Dashboard** — real-time CPU load, temperature, memory, disk, and uptime (updates every 3 seconds)
+- **System Dashboard** — real-time CPU load, temperature, memory, disk, and uptime pushed via WebSocket (updates every 3 seconds)
 - **Stat History** — SQLite-backed logging every 60 seconds, 24-hour retention; sparkline previews on each card, click for a full chart
 - **Temperature Unit Toggle** — switch between °F and °C from the header, defaults to °F, persists across sessions
 - **Web Terminal** — full in-browser terminal session via xterm.js + node-pty
@@ -38,12 +38,18 @@ pi_dashboard/
 │   │   │   └── PrefsContext.jsx      # temperature unit preference (°F/°C)
 │   │   ├── pages/
 │   │   │   ├── Login.jsx
-│   │   │   ├── Dashboard.jsx         # stat cards + sparklines
+│   │   │   ├── Dashboard.jsx         # stat cards + sparklines (WebSocket live feed)
+│   │   │   ├── Services.jsx          # systemd service manager + log viewer
+│   │   │   ├── Processes.jsx         # process manager with kill
+│   │   │   ├── Wifi.jsx              # WiFi scan + connect/disconnect
+│   │   │   ├── System.jsx            # system info + reboot/shutdown controls
 │   │   │   └── Terminal.jsx          # xterm.js terminal
 │   │   └── components/
 │   │       ├── Header.jsx            # nav + temp unit toggle + logout
 │   │       ├── ProtectedRoute.jsx    # redirects to /login if no session
-│   │       └── StatDetail.jsx        # full 24-hour chart modal
+│   │       ├── StatDetail.jsx        # full 24-hour chart modal
+│   │       ├── LogModal.jsx          # journalctl log viewer modal
+│   │       └── PasswordModal.jsx     # password confirmation modal (stop/kill/reboot)
 │   ├── index.html
 │   ├── vite.config.js
 │   └── package.json
@@ -52,10 +58,15 @@ pi_dashboard/
 │   │   ├── index.js        # Express + HTTP server entry point
 │   │   ├── auth.js         # /api/auth routes + JWT logic
 │   │   ├── middleware.js   # requireAuth middleware
-│   │   ├── stats.js        # /api/stats and /api/stats/history routes
+│   │   ├── stats.js        # /api/stats routes + getLiveStats() shared function
+│   │   ├── statsWs.js      # /ws/stats WebSocket — pushes live stats every 3s
 │   │   ├── collector.js    # background job — snapshots stats every 60s
 │   │   ├── db.js           # SQLite schema + prepared statements
-│   │   └── terminal.js     # node-pty WebSocket handler
+│   │   ├── services.js     # /api/services routes + journalctl log viewer
+│   │   ├── system.js       # /api/system routes — info, reboot, shutdown
+│   │   ├── processes.js    # /api/processes routes — list + kill
+│   │   ├── wifi.js         # /api/wifi routes — scan, connect, disconnect
+│   │   └── terminal.js     # node-pty WebSocket handler (/ws/terminal)
 │   ├── .env                # credentials — do not commit
 │   ├── .env.example
 │   └── package.json
@@ -261,13 +272,15 @@ EOF
 | GET | `/api/wifi/networks` | required | Scan and list nearby networks |
 | POST | `/api/wifi/connect` | required | Connect to a network |
 | POST | `/api/wifi/disconnect` | required | Disconnect from current network |
+| WS | `/ws/stats` | required | Live stats pushed every 3s |
+| WS | `/ws/terminal` | required | Interactive shell session |
 
 ## Roadmap
 
 - [x] Project structure
 - [x] Auth — JWT httpOnly cookie, login/logout/verify
 - [x] Stats API — CPU, temperature, memory, disk, uptime
-- [x] Dashboard UI — live stat cards, 3s polling
+- [x] Dashboard UI — live stat cards, real-time WebSocket push (3s interval)
 - [x] Stat history — SQLite logging, 24-hour retention
 - [x] History charts — sparkline previews + full detail modal
 - [x] Temperature unit toggle — °F/°C, persists in localStorage
@@ -283,3 +296,4 @@ EOF
 - [x] System controls — password-gated reboot and shutdown
 - [x] Process manager — top 30 processes by CPU, kill with auth
 - [x] WiFi manager — scan networks, connect/disconnect via nmcli
+- [x] Real-time stats — WebSocket push replaces HTTP polling on dashboard

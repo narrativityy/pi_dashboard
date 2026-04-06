@@ -1,6 +1,6 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { LineChart, Line, ResponsiveContainer, Tooltip } from 'recharts';
-import { getStats, getHistory } from '../api';
+import { getHistory } from '../api';
 import { usePrefs, toDisplayTemp } from '../context/PrefsContext';
 import Header from '../components/Header';
 import StatDetail from '../components/StatDetail';
@@ -63,34 +63,36 @@ export default function Dashboard() {
   const [error, setError] = useState('');
   const [detail, setDetail] = useState(null);
   const { tempUnit } = usePrefs();
+  const reconnectTimer = useRef(null);
+  const wsRef = useRef(null);
 
   useEffect(() => {
-    let active = true;
+    function connect() {
+      const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+      const host = import.meta.env.DEV ? 'localhost:3001' : window.location.host;
+      const ws = new WebSocket(`${protocol}//${host}/ws/stats`);
+      wsRef.current = ws;
 
-    async function fetchStats() {
-      try {
-        const data = await getStats();
-        if (active) setStats(data);
-      } catch {
-        if (active) setError('Failed to load stats');
-      }
+      ws.onmessage = (e) => {
+        try { setStats(JSON.parse(e.data)); } catch {}
+      };
+      ws.onerror = () => setError('Stats connection error');
+      ws.onclose = () => {
+        reconnectTimer.current = setTimeout(connect, 3000);
+      };
     }
+
+    connect();
 
     async function fetchHistory() {
-      try {
-        const data = await getHistory();
-        if (active) setHistory(data);
-      } catch {}
+      try { setHistory(await getHistory()); } catch {}
     }
-
-    fetchStats();
     fetchHistory();
-    const statsInterval = setInterval(fetchStats, 3000);
     const historyInterval = setInterval(fetchHistory, 60000);
 
     return () => {
-      active = false;
-      clearInterval(statsInterval);
+      clearTimeout(reconnectTimer.current);
+      wsRef.current?.close();
       clearInterval(historyInterval);
     };
   }, []);
