@@ -29,3 +29,9 @@ export async function getStats() {
   if (!res.ok) throw new Error('Failed to fetch stats');
   return res.json();
 }
+
+export async function getHistory() {
+  const res = await fetch('/api/stats/history?hours=24', { credentials: 'include' });
+  if (!res.ok) throw new Error('Failed to fetch history');
+  return res.json();
+}

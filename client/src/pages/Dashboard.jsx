@@ -1,6 +1,9 @@
 import { useEffect, useState } from 'react';
-import { getStats } from '../api';
+import { LineChart, Line, ResponsiveContainer, Tooltip } from 'recharts';
+import { getStats, getHistory } from '../api';
+import { usePrefs, toDisplayTemp } from '../context/PrefsContext';
 import Header from '../components/Header';
+import StatDetail from '../components/StatDetail';
 
 function formatBytes(bytes) {
   const gb = bytes / 1024 ** 3;
@@ -16,24 +19,50 @@ function formatUptime(seconds) {
   return `${m}m`;
 }
 
-function StatCard({ label, value, sub, percent }) {
+function Sparkline({ data, dataKey, color }) {
+  if (!data || data.length < 2) return <div className="sparkline-empty" />;
+  return (
+    <ResponsiveContainer width="100%" height={48}>
+      <LineChart data={data}>
+        <Line type="monotone" dataKey={dataKey} stroke={color} strokeWidth={1.5} dot={false} />
+        <Tooltip
+          contentStyle={{ background: '#1a1d27', border: '1px solid #2d3148', borderRadius: 6, fontSize: 11 }}
+          formatter={(v) => [`${Math.round(v)}`, '']}
+          labelFormatter={() => ''}
+        />
+      </LineChart>
+    </ResponsiveContainer>
+  );
+}
+
+function StatCard({ label, value, sub, onClick, children }) {
+  return (
+    <div className="stat-card stat-card-clickable" onClick={onClick}>
+      <div className="stat-label">{label}</div>
+      <div className="stat-value">{value}</div>
+      {sub && <div className="stat-sub">{sub}</div>}
+      <div className="stat-sparkline">{children}</div>
+      <div className="stat-card-hint">click for details</div>
+    </div>
+  );
+}
+
+function PlainCard({ label, value, sub }) {
   return (
     <div className="stat-card">
       <div className="stat-label">{label}</div>
       <div className="stat-value">{value}</div>
       {sub && <div className="stat-sub">{sub}</div>}
-      {percent !== undefined && (
-        <div className="stat-bar">
-          <div className="stat-bar-fill" style={{ width: `${percent}%` }} />
-        </div>
-      )}
     </div>
   );
 }
 
 export default function Dashboard() {
   const [stats, setStats] = useState(null);
+  const [history, setHistory] = useState([]);
   const [error, setError] = useState('');
+  const [detail, setDetail] = useState(null);
+  const { tempUnit } = usePrefs();
 
   useEffect(() => {
     let active = true;
@@ -47,13 +76,33 @@ export default function Dashboard() {
       }
     }
 
+    async function fetchHistory() {
+      try {
+        const data = await getHistory();
+        if (active) setHistory(data);
+      } catch {}
+    }
+
     fetchStats();
-    const interval = setInterval(fetchStats, 3000);
+    fetchHistory();
+    const statsInterval = setInterval(fetchStats, 3000);
+    const historyInterval = setInterval(fetchHistory, 60000);
+
     return () => {
       active = false;
-      clearInterval(interval);
+      clearInterval(statsInterval);
+      clearInterval(historyInterval);
     };
   }, []);
+
+  const tempHistory = history.map((r) => ({
+    t: r.timestamp,
+    value: toDisplayTemp(r.temp_c, tempUnit),
+  }));
+
+  const tempDisplay = stats
+    ? toDisplayTemp(stats.temperature.main, tempUnit)
+    : null;
 
   return (
     <div className="dashboard">
@@ -68,33 +117,45 @@ export default function Dashboard() {
               label="CPU Load"
               value={`${stats.cpu.load}%`}
               sub={`${stats.cpu.cores} cores · ${stats.cpu.speed} GHz`}
-              percent={stats.cpu.load}
-            />
+              onClick={() => setDetail('cpu')}
+            >
+              <Sparkline data={history} dataKey="cpu_load" color="#6366f1" />
+            </StatCard>
+
             <StatCard
               label="Temperature"
-              value={stats.temperature.main !== null ? `${stats.temperature.main}°C` : 'N/A'}
-            />
+              value={tempDisplay !== null ? `${Math.round(tempDisplay)}°${tempUnit}` : 'N/A'}
+              onClick={() => setDetail('temperature')}
+            >
+              <Sparkline data={tempHistory} dataKey="value" color="#f97316" />
+            </StatCard>
+
             <StatCard
               label="Memory"
               value={`${stats.memory.percent}%`}
               sub={`${formatBytes(stats.memory.used)} / ${formatBytes(stats.memory.total)}`}
-              percent={stats.memory.percent}
-            />
+              onClick={() => setDetail('memory')}
+            >
+              <Sparkline data={history} dataKey="mem_percent" color="#22d3ee" />
+            </StatCard>
+
             {stats.disk && (
-              <StatCard
+              <PlainCard
                 label="Disk"
                 value={`${stats.disk.percent}%`}
                 sub={`${formatBytes(stats.disk.used)} / ${formatBytes(stats.disk.size)} (${stats.disk.mount})`}
-                percent={stats.disk.percent}
               />
             )}
-            <StatCard
+
+            <PlainCard
               label="Uptime"
               value={formatUptime(stats.uptime)}
             />
           </div>
         )}
       </div>
+
+      {detail && <StatDetail stat={detail} onClose={() => setDetail(null)} />}
     </div>
   );
 }

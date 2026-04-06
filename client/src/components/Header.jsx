@@ -1,8 +1,10 @@
 import { NavLink, useNavigate } from 'react-router-dom';
 import { logout } from '../api';
+import { usePrefs } from '../context/PrefsContext';
 
 export default function Header() {
   const navigate = useNavigate();
+  const { tempUnit, toggleTempUnit } = usePrefs();
 
   async function handleLogout() {
     await logout();
@@ -20,7 +22,12 @@ export default function Header() {
           Terminal
         </NavLink>
       </nav>
-      <button className="logout-btn" onClick={handleLogout}>Log out</button>
+      <div className="header-actions">
+        <button className="unit-toggle" onClick={toggleTempUnit}>
+          °{tempUnit === 'F' ? 'C' : 'F'}
+        </button>
+        <button className="logout-btn" onClick={handleLogout}>Log out</button>
+      </div>
     </header>
   );
 }
