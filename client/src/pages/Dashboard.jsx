@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { getStats, logout } from '../api';
+import { getStats } from '../api';
+import Header from '../components/Header';
 
 function formatBytes(bytes) {
   const gb = bytes / 1024 ** 3;
@@ -34,7 +34,6 @@ function StatCard({ label, value, sub, percent }) {
 export default function Dashboard() {
   const [stats, setStats] = useState(null);
   const [error, setError] = useState('');
-  const navigate = useNavigate();
 
   useEffect(() => {
     let active = true;
@@ -56,17 +55,9 @@ export default function Dashboard() {
     };
   }, []);
 
-  async function handleLogout() {
-    await logout();
-    navigate('/login');
-  }
-
   return (
     <div className="dashboard">
-      <header className="dashboard-header">
-        <h1>Pi Dashboard</h1>
-        <button className="logout-btn" onClick={handleLogout}>Log out</button>
-      </header>
+      <Header />
 
       {error && <p className="error">{error}</p>}
 

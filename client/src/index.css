@@ -85,6 +85,19 @@ body {
 
 .logout-btn:hover { border-color: #6366f1; color: #e2e8f0; }
 
+.nav { display: flex; gap: 4px; }
+
+.nav-link {
+  padding: 6px 14px;
+  border-radius: 6px;
+  color: #64748b;
+  text-decoration: none;
+  font-size: 0.875rem;
+}
+
+.nav-link:hover { color: #e2e8f0; }
+.nav-link.active { background: #2d3148; color: #e2e8f0; }
+
 .stat-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
@@ -133,6 +146,18 @@ body {
   border-radius: 2px;
   transition: width 0.6s ease;
 }
+
+/* Terminal */
+.terminal-page { display: flex; flex-direction: column; height: 100vh; }
+
+.terminal-container {
+  flex: 1;
+  padding: 8px;
+  background: #0f1117;
+  overflow: hidden;
+}
+
+.terminal-container .xterm { height: 100%; }
 
 /* Shared */
 .error { color: #f87171; font-size: 0.875rem; margin-bottom: 16px; }
