@@ -5,6 +5,7 @@ After=network.target
 [Service]
 Type=simple
 User=pi
+SupplementaryGroups=shadow
 WorkingDirectory=/home/pi/Documents/pi_dashboard/server
 Environment=NODE_ENV=production
 ExecStart=/usr/local/bin/node src/index.js

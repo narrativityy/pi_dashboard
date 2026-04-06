@@ -71,16 +71,44 @@ pi_dashboard/
 
 ## Authentication
 
-Credentials are set in `server/.env`. On login the server issues a signed JWT stored as an httpOnly cookie — required for all API calls and the terminal WebSocket connection.
+On login the server issues a signed JWT stored as an httpOnly cookie — required for all API calls and the terminal WebSocket connection. Two auth modes are supported, set via `AUTH_MODE` in `server/.env`.
+
+### Static (default)
+
+Username and password are set directly in `.env`. Good for a personal install where you just want simple access control.
 
 ```
+AUTH_MODE=static
 DASHBOARD_USER=youruser
 DASHBOARD_PASS=yourpassword
 SESSION_SECRET=a-long-random-string
 PORT=3001
 ```
 
-> **Future:** PAM authentication via `authenticate-pam` so any Linux user account on the host can log in with their system password. The login still only gates dashboard access — the terminal runs as whichever user started the server.
+### PAM
+
+Authenticates against real Linux user accounts on the host device using the system's PAM stack. Any user account on the Pi can log in with their actual system password — no hardcoded credentials needed. Makes the project portable: clone it, set `AUTH_MODE=pam`, done.
+
+```
+AUTH_MODE=pam
+SESSION_SECRET=a-long-random-string
+PORT=3001
+```
+
+**Requirements for PAM mode:**
+
+1. Install the PAM dev library:
+   ```bash
+   sudo apt install libpam0g-dev
+   ```
+
+2. Add the server's user to the `shadow` group so it can authenticate against `/etc/shadow`:
+   ```bash
+   sudo usermod -a -G shadow pi
+   ```
+   > If using the systemd service, `SupplementaryGroups=shadow` is already set in `pi-dashboard.service` — just reload and restart after copying the updated service file.
+
+> **Note:** PAM auth only gates access to the dashboard. The terminal session still runs as whichever user started the server, not the logged-in user.
 
 ## Getting Started
 
@@ -96,7 +124,7 @@ sudo apt install -y nodejs
 Everything else:
 
 ```bash
-sudo apt install -y git build-essential python3
+sudo apt install -y git build-essential python3 libpam0g-dev
 ```
 
 | Package | Why |
@@ -104,8 +132,9 @@ sudo apt install -y git build-essential python3
 | `nodejs` (22 LTS) | runtime for the server |
 | `npm` | comes bundled with Node.js |
 | `git` | clone the repo |
-| `build-essential` | compiles native modules (node-pty, better-sqlite3) |
+| `build-essential` | compiles native modules (node-pty, better-sqlite3, authenticate-pam) |
 | `python3` | required by node-gyp for native module compilation |
+| `libpam0g-dev` | PAM header library required by authenticate-pam |
 
 ### Install
 
@@ -218,5 +247,5 @@ cd ~/Documents/pi_dashboard && ./update.sh
 - [x] Production build — single port, static frontend served from Express
 - [x] systemd service — auto-start on boot
 - [x] systemd timer — auto-update from GitHub every 5 minutes
+- [x] PAM authentication — real Linux user login via AUTH_MODE=pam
 - [ ] WiFi hotspot mode — USB dongle as AP, onboard WiFi for internet
-- [ ] PAM authentication — real Linux user login
