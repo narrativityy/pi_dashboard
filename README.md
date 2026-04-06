@@ -73,7 +73,7 @@ PORT=3001
 The default Raspberry Pi OS repos ship an outdated version of Node.js. Install via NodeSource to get 18+:
 
 ```bash
-curl -fsSL https://deb.nodesource.com/setup_18.x | sudo -E bash -
+curl -fsSL https://deb.nodesource.com/setup_22.x | sudo -E bash -
 sudo apt install -y nodejs
 ```
 
@@ -85,7 +85,7 @@ sudo apt install -y git build-essential python3
 
 | Package | Why |
 |---|---|
-| `nodejs` (18+) | runtime for the server |
+| `nodejs` (22 LTS) | runtime for the server |
 | `npm` | comes bundled with Node.js |
 | `git` | clone the repo |
 | `build-essential` | compiles native modules (needed for the terminal feature) |
