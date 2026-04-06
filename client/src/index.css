@@ -239,6 +239,89 @@ body {
 
 .unit-toggle:hover { border-color: #6366f1; color: #e2e8f0; }
 
+/* Services */
+.section-title {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin-bottom: 16px;
+}
+
+.services-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.service-row {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  background: #1a1d27;
+  border: 1px solid #2d3148;
+  border-radius: 10px;
+  padding: 14px 18px;
+}
+
+.service-info { flex: 1; min-width: 0; }
+
+.service-name {
+  font-size: 0.95rem;
+  font-weight: 500;
+  color: #e2e8f0;
+  margin-bottom: 2px;
+}
+
+.service-desc {
+  font-size: 0.75rem;
+  color: #64748b;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.service-status {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 3px;
+  min-width: 90px;
+}
+
+.status-badge {
+  font-size: 0.72rem;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 99px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.service-substate {
+  font-size: 0.7rem;
+  color: #475569;
+}
+
+.service-actions { display: flex; gap: 6px; }
+
+.svc-btn {
+  padding: 5px 12px;
+  border-radius: 6px;
+  border: 1px solid #2d3148;
+  background: transparent;
+  color: #94a3b8;
+  font-size: 0.8rem;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.svc-btn:disabled { opacity: 0.35; cursor: not-allowed; }
+.svc-btn-start:not(:disabled):hover { border-color: #22c55e; color: #22c55e; }
+.svc-btn-restart:not(:disabled):hover { border-color: #6366f1; color: #6366f1; }
+.svc-btn-stop:not(:disabled):hover { border-color: #f87171; color: #f87171; }
+
 /* Terminal */
 .terminal-page { display: flex; flex-direction: column; height: 100vh; }
 

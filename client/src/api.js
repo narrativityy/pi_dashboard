@@ -35,3 +35,18 @@ export async function getHistory() {
   if (!res.ok) throw new Error('Failed to fetch history');
   return res.json();
 }
+
+export async function getServices() {
+  const res = await fetch('/api/services', { credentials: 'include' });
+  if (!res.ok) throw new Error('Failed to fetch services');
+  return res.json();
+}
+
+export async function serviceAction(name, action) {
+  const res = await fetch(`/api/services/${name}/${action}`, {
+    method: 'POST',
+    credentials: 'include',
+  });
+  if (!res.ok) throw new Error(`Failed to ${action} ${name}`);
+  return res.json();
+}

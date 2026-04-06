@@ -6,6 +6,7 @@ const cors = require('cors');
 const path = require('path');
 const authRouter = require('./auth');
 const statsRouter = require('./stats');
+const servicesRouter = require('./services');
 const setupTerminal = require('./terminal');
 const startCollector = require('./collector');
 const { requireAuth } = require('./middleware');
@@ -24,6 +25,7 @@ app.use(cookieParser());
 
 app.use('/api/auth', authRouter);
 app.use('/api/stats', requireAuth, statsRouter);
+app.use('/api/services', requireAuth, servicesRouter);
 
 // Attach WebSocket terminal to the HTTP server
 setupTerminal(server);
