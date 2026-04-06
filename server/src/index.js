@@ -1,13 +1,16 @@
 require('dotenv').config();
+const http = require('http');
 const express = require('express');
 const cookieParser = require('cookie-parser');
 const cors = require('cors');
 const path = require('path');
 const authRouter = require('./auth');
 const statsRouter = require('./stats');
+const setupTerminal = require('./terminal');
 const { requireAuth } = require('./middleware');
 
 const app = express();
+const server = http.createServer(app);
 const PORT = process.env.PORT || 3001;
 const IS_PROD = process.env.NODE_ENV === 'production';
 
@@ -21,6 +24,9 @@ app.use(cookieParser());
 app.use('/api/auth', authRouter);
 app.use('/api/stats', requireAuth, statsRouter);
 
+// Attach WebSocket terminal to the HTTP server
+setupTerminal(server);
+
 // In production, serve the built React app
 if (IS_PROD) {
   const clientDist = path.join(__dirname, '../../client/dist');
@@ -30,6 +36,6 @@ if (IS_PROD) {
   });
 }
 
-app.listen(PORT, '0.0.0.0', () => {
+server.listen(PORT, '0.0.0.0', () => {
   console.log(`Server running on http://0.0.0.0:${PORT}`);
 });
