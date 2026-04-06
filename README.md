@@ -170,6 +170,29 @@ Check status with:
 sudo systemctl status pi-dashboard
 ```
 
+### Auto-update
+
+The Pi can automatically check for new commits and rebuild every 5 minutes using a systemd timer.
+
+```bash
+sudo cp pi-dashboard-update.service /etc/systemd/system/
+sudo cp pi-dashboard-update.timer /etc/systemd/system/
+sudo systemctl daemon-reload
+sudo systemctl enable pi-dashboard-update.timer
+sudo systemctl start pi-dashboard-update.timer
+```
+
+Check timer status and when it last ran:
+```bash
+sudo systemctl status pi-dashboard-update.timer
+sudo journalctl -u pi-dashboard-update.service -n 20 --no-pager
+```
+
+To trigger an update manually at any time:
+```bash
+cd ~/Documents/pi_dashboard && ./update.sh
+```
+
 ## API Routes
 
 | Method | Path | Auth | Description |
