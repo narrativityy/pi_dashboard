@@ -1,10 +1,15 @@
 import { NavLink, useNavigate } from 'react-router-dom';
 import { logout } from '../api';
 import { usePrefs } from '../context/PrefsContext';
+import { useStats } from '../context/StatsContext';
+
+const STATUS_COLOR = { connected: '#22c55e', connecting: '#facc15', disconnected: '#f87171' };
+const STATUS_LABEL = { connected: 'Live', connecting: 'Connecting…', disconnected: 'Disconnected' };
 
 export default function Header() {
   const navigate = useNavigate();
   const { tempUnit, toggleTempUnit } = usePrefs();
+  const { wsStatus } = useStats();
 
   async function handleLogout() {
     await logout();
@@ -30,11 +35,18 @@ export default function Header() {
         <NavLink to="/wifi" className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}>
           WiFi
         </NavLink>
+        <NavLink to="/files" className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}>
+          Files
+        </NavLink>
         <NavLink to="/system" className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}>
           System
         </NavLink>
       </nav>
       <div className="header-actions">
+        <span className="ws-status" title={STATUS_LABEL[wsStatus]}>
+          <span className="ws-dot" style={{ background: STATUS_COLOR[wsStatus] }} />
+          {STATUS_LABEL[wsStatus]}
+        </span>
         <button className="unit-toggle" onClick={toggleTempUnit}>
           °{tempUnit === 'F' ? 'C' : 'F'}
         </button>

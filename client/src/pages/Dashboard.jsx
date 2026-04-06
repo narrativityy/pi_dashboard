@@ -1,7 +1,8 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { LineChart, Line, ResponsiveContainer, Tooltip } from 'recharts';
 import { getHistory } from '../api';
 import { usePrefs, toDisplayTemp } from '../context/PrefsContext';
+import { useStats } from '../context/StatsContext';
 import Header from '../components/Header';
 import StatDetail from '../components/StatDetail';
 
@@ -58,43 +59,18 @@ function PlainCard({ label, value, sub }) {
 }
 
 export default function Dashboard() {
-  const [stats, setStats] = useState(null);
+  const { stats } = useStats();
   const [history, setHistory] = useState([]);
-  const [error, setError] = useState('');
   const [detail, setDetail] = useState(null);
   const { tempUnit } = usePrefs();
-  const reconnectTimer = useRef(null);
-  const wsRef = useRef(null);
 
   useEffect(() => {
-    function connect() {
-      const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-      const host = import.meta.env.DEV ? 'localhost:3001' : window.location.host;
-      const ws = new WebSocket(`${protocol}//${host}/ws/stats`);
-      wsRef.current = ws;
-
-      ws.onmessage = (e) => {
-        try { setStats(JSON.parse(e.data)); } catch {}
-      };
-      ws.onerror = () => setError('Stats connection error');
-      ws.onclose = () => {
-        reconnectTimer.current = setTimeout(connect, 3000);
-      };
-    }
-
-    connect();
-
     async function fetchHistory() {
       try { setHistory(await getHistory()); } catch {}
     }
     fetchHistory();
     const historyInterval = setInterval(fetchHistory, 60000);
-
-    return () => {
-      clearTimeout(reconnectTimer.current);
-      wsRef.current?.close();
-      clearInterval(historyInterval);
-    };
+    return () => clearInterval(historyInterval);
   }, []);
 
   const tempHistory = history.map((r) => ({
@@ -110,7 +86,6 @@ export default function Dashboard() {
     <div className="dashboard">
       <Header />
       <div className="dashboard-content">
-        {error && <p className="error">{error}</p>}
         {!stats ? (
           <p className="loading">Loading...</p>
         ) : (

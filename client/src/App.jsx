@@ -6,11 +6,14 @@ import Services from './pages/Services';
 import System from './pages/System';
 import Processes from './pages/Processes';
 import Wifi from './pages/Wifi';
+import Files from './pages/Files';
 import ProtectedRoute from './components/ProtectedRoute';
+import { StatsProvider } from './context/StatsContext';
 
 export default function App() {
   return (
     <BrowserRouter>
+      <StatsProvider>
       <Routes>
         <Route path="/login" element={<Login />} />
         <Route
@@ -61,8 +64,17 @@ export default function App() {
             </ProtectedRoute>
           }
         />
+        <Route
+          path="/files"
+          element={
+            <ProtectedRoute>
+              <Files />
+            </ProtectedRoute>
+          }
+        />
         <Route path="*" element={<Navigate to="/dashboard" replace />} />
       </Routes>
+      </StatsProvider>
     </BrowserRouter>
   );
 }

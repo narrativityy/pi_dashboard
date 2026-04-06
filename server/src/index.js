@@ -10,6 +10,7 @@ const servicesRouter = require('./services');
 const systemRouter = require('./system');
 const processesRouter = require('./processes');
 const wifiRouter = require('./wifi');
+const filesRouter = require('./files');
 const { WebSocketServer } = require('ws');
 const setupTerminal = require('./terminal');
 const setupStatsWs = require('./statsWs');
@@ -34,6 +35,7 @@ app.use('/api/services', requireAuth, servicesRouter);
 app.use('/api/system', requireAuth, systemRouter);
 app.use('/api/processes', requireAuth, processesRouter);
 app.use('/api/wifi', requireAuth, wifiRouter);
+app.use('/api/files', requireAuth, filesRouter);
 
 // Attach WebSockets — use noServer + manual upgrade routing so both
 // paths can coexist on the same HTTP server without handler conflicts.

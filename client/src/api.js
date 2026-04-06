@@ -129,3 +129,26 @@ export async function wifiDisconnect() {
   if (!res.ok) throw new Error(data.error || 'Failed to disconnect');
   return data;
 }
+
+export async function listFiles(path = '') {
+  const res = await fetch(`/api/files?path=${encodeURIComponent(path)}`, { credentials: 'include' });
+  if (!res.ok) { const d = await res.json(); throw new Error(d.error || 'Failed to list files'); }
+  return res.json();
+}
+
+export function downloadFileUrl(path) {
+  return `/api/files/download?path=${encodeURIComponent(path)}`;
+}
+
+export async function uploadFile(dirPath, file) {
+  const form = new FormData();
+  form.append('file', file);
+  const res = await fetch(`/api/files/upload?path=${encodeURIComponent(dirPath)}`, {
+    method: 'POST',
+    credentials: 'include',
+    body: form,
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || 'Upload failed');
+  return data;
+}
