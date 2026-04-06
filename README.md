@@ -144,9 +144,23 @@ Then open `http://<pi-ip>:3001` from any device on your network.
 
 ### Auto-start on Boot
 
+The service file assumes the following — edit `pi-dashboard.service` if anything differs:
+
+| Field | Default value |
+|---|---|
+| `User` | `pi` |
+| `WorkingDirectory` | `/home/pi/Documents/pi_dashboard/server` |
+| `ExecStart` | `/usr/local/bin/node src/index.js` |
+
+Verify your node path with `which node` before copying.
+
 ```bash
-# edit pi-dashboard.service — update User and WorkingDirectory to match your install path
+# confirm node path
+which node
+
+# copy and enable
 sudo cp pi-dashboard.service /etc/systemd/system/
+sudo systemctl daemon-reload
 sudo systemctl enable pi-dashboard
 sudo systemctl start pi-dashboard
 ```
