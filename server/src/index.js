@@ -7,6 +7,7 @@ const path = require('path');
 const authRouter = require('./auth');
 const statsRouter = require('./stats');
 const setupTerminal = require('./terminal');
+const startCollector = require('./collector');
 const { requireAuth } = require('./middleware');
 
 const app = express();
@@ -38,4 +39,5 @@ if (IS_PROD) {
 
 server.listen(PORT, '0.0.0.0', () => {
   console.log(`Server running on http://0.0.0.0:${PORT}`);
+  startCollector();
 });

@@ -1,5 +1,6 @@
 const express = require('express');
 const si = require('systeminformation');
+const { getHistory } = require('./db');
 const router = express.Router();
 
 router.get('/', async (req, res) => {
@@ -47,6 +48,13 @@ router.get('/', async (req, res) => {
   } catch (err) {
     res.status(500).json({ error: 'Failed to read system stats' });
   }
+});
+
+router.get('/history', (req, res) => {
+  const hours = Math.min(parseInt(req.query.hours) || 24, 24);
+  const cutoff = Date.now() - hours * 60 * 60 * 1000;
+  const rows = getHistory.all({ cutoff });
+  res.json(rows);
 });
 
 module.exports = router;
