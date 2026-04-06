@@ -234,6 +234,9 @@ pi ALL=(ALL) NOPASSWD: /bin/systemctl stop *
 pi ALL=(ALL) NOPASSWD: /bin/systemctl restart *
 pi ALL=(ALL) NOPASSWD: /sbin/reboot
 pi ALL=(ALL) NOPASSWD: /sbin/shutdown
+pi ALL=(ALL) NOPASSWD: /usr/bin/nmcli device wifi connect *
+pi ALL=(ALL) NOPASSWD: /usr/bin/nmcli device disconnect *
+pi ALL=(ALL) NOPASSWD: /usr/bin/nmcli connection up *
 EOF
 ```
 
@@ -254,6 +257,10 @@ EOF
 | POST | `/api/system/shutdown` | required | Shutdown device (password required) |
 | GET | `/api/processes` | required | Top 30 processes by CPU usage |
 | POST | `/api/processes/:pid/kill` | required | SIGTERM a process (password required) |
+| GET | `/api/wifi/status` | required | Current WiFi connection status |
+| GET | `/api/wifi/networks` | required | Scan and list nearby networks |
+| POST | `/api/wifi/connect` | required | Connect to a network |
+| POST | `/api/wifi/disconnect` | required | Disconnect from current network |
 
 ## Roadmap
 
@@ -275,4 +282,4 @@ EOF
 - [x] System info — OS, kernel, CPU, RAM, uptime
 - [x] System controls — password-gated reboot and shutdown
 - [x] Process manager — top 30 processes by CPU, kill with auth
-- [ ] WiFi hotspot mode — USB dongle as AP, onboard WiFi for internet
+- [x] WiFi manager — scan networks, connect/disconnect via nmcli

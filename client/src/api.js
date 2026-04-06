@@ -95,3 +95,37 @@ export async function serviceAction(name, action, password = null) {
   if (!res.ok) throw new Error(data.error || `Failed to ${action} ${name}`);
   return data;
 }
+
+export async function getWifiStatus() {
+  const res = await fetch('/api/wifi/status', { credentials: 'include' });
+  if (!res.ok) throw new Error('Failed to fetch WiFi status');
+  return res.json();
+}
+
+export async function getWifiNetworks(rescan = false) {
+  const res = await fetch(`/api/wifi/networks?rescan=${rescan}`, { credentials: 'include' });
+  if (!res.ok) throw new Error('Failed to fetch WiFi networks');
+  return res.json();
+}
+
+export async function wifiConnect(ssid, password = null) {
+  const res = await fetch('/api/wifi/connect', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    credentials: 'include',
+    body: JSON.stringify(password ? { ssid, password } : { ssid }),
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || 'Failed to connect');
+  return data;
+}
+
+export async function wifiDisconnect() {
+  const res = await fetch('/api/wifi/disconnect', {
+    method: 'POST',
+    credentials: 'include',
+  });
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || 'Failed to disconnect');
+  return data;
+}

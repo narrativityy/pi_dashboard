@@ -27,6 +27,9 @@ export default function Header() {
         <NavLink to="/processes" className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}>
           Processes
         </NavLink>
+        <NavLink to="/wifi" className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}>
+          WiFi
+        </NavLink>
         <NavLink to="/system" className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}>
           System
         </NavLink>

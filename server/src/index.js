@@ -9,6 +9,7 @@ const statsRouter = require('./stats');
 const servicesRouter = require('./services');
 const systemRouter = require('./system');
 const processesRouter = require('./processes');
+const wifiRouter = require('./wifi');
 const setupTerminal = require('./terminal');
 const startCollector = require('./collector');
 const { requireAuth } = require('./middleware');
@@ -30,6 +31,7 @@ app.use('/api/stats', requireAuth, statsRouter);
 app.use('/api/services', requireAuth, servicesRouter);
 app.use('/api/system', requireAuth, systemRouter);
 app.use('/api/processes', requireAuth, processesRouter);
+app.use('/api/wifi', requireAuth, wifiRouter);
 
 // Attach WebSocket terminal to the HTTP server
 setupTerminal(server);

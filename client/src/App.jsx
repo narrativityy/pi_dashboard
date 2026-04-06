@@ -5,6 +5,7 @@ import Terminal from './pages/Terminal';
 import Services from './pages/Services';
 import System from './pages/System';
 import Processes from './pages/Processes';
+import Wifi from './pages/Wifi';
 import ProtectedRoute from './components/ProtectedRoute';
 
 export default function App() {
@@ -49,6 +50,14 @@ export default function App() {
           element={
             <ProtectedRoute>
               <Processes />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/wifi"
+          element={
+            <ProtectedRoute>
+              <Wifi />
             </ProtectedRoute>
           }
         />
