@@ -151,6 +151,19 @@ export default function Dashboard() {
               label="Uptime"
               value={formatUptime(stats.uptime)}
             />
+
+            {stats.network && (
+              <div className="stat-card network-card">
+                <div className="stat-label">Network</div>
+                <div className="network-hostname">{stats.network.hostname}</div>
+                <div className="network-ip">{stats.network.ip}</div>
+                <div className="network-iface">{stats.network.iface} · {stats.network.type}</div>
+                <div className="network-traffic">
+                  <span className="network-rx">↓ {formatBytes(stats.network.rx_bytes)}</span>
+                  <span className="network-tx">↑ {formatBytes(stats.network.tx_bytes)}</span>
+                </div>
+              </div>
+            )}
           </div>
         )}
       </div>

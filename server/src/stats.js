@@ -5,16 +5,23 @@ const router = express.Router();
 
 router.get('/', async (req, res) => {
   try {
-    const [cpu, cpuTemp, mem, disk, time, load] = await Promise.all([
+    const [cpu, cpuTemp, mem, disk, time, load, ifaces, netStats, osInfo] = await Promise.all([
       si.cpu(),
       si.cpuTemperature(),
       si.mem(),
       si.fsSize(),
       si.time(),
       si.currentLoad(),
+      si.networkInterfaces(),
+      si.networkStats(),
+      si.osInfo(),
     ]);
 
     const mainDisk = disk.find((d) => d.mount === '/') || disk[0];
+    const primaryIface = (Array.isArray(ifaces) ? ifaces : [ifaces])
+      .find((i) => i.default && !i.internal) ||
+      (Array.isArray(ifaces) ? ifaces : [ifaces]).find((i) => !i.internal);
+    const primaryStats = netStats.find((s) => s.iface === primaryIface?.iface) || netStats[0];
 
     res.json({
       cpu: {
@@ -41,6 +48,16 @@ router.get('/', async (req, res) => {
             size: mainDisk.size,
             used: mainDisk.used,
             percent: Math.round(mainDisk.use),
+          }
+        : null,
+      network: primaryIface
+        ? {
+            hostname: osInfo.hostname,
+            iface: primaryIface.iface,
+            ip: primaryIface.ip4,
+            type: primaryIface.type,
+            rx_bytes: primaryStats?.rx_bytes ?? 0,
+            tx_bytes: primaryStats?.tx_bytes ?? 0,
           }
         : null,
       uptime: time.uptime,

@@ -153,6 +153,35 @@ body {
   margin-top: 6px;
 }
 
+/* Network card */
+.network-hostname {
+  font-size: 1.3rem;
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+
+.network-ip {
+  font-size: 0.95rem;
+  color: #e2e8f0;
+  margin-bottom: 2px;
+  font-family: ui-monospace, monospace;
+}
+
+.network-iface {
+  font-size: 0.75rem;
+  color: #64748b;
+  margin-bottom: 12px;
+}
+
+.network-traffic {
+  display: flex;
+  gap: 12px;
+  font-size: 0.8rem;
+}
+
+.network-rx { color: #22d3ee; }
+.network-tx { color: #a78bfa; }
+
 /* Modal */
 .modal-overlay {
   position: fixed;
