@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { getServices, serviceAction } from '../api';
 import Header from '../components/Header';
+import PasswordModal from '../components/PasswordModal';
 
 const STATE_COLORS = {
   active: '#22c55e',
@@ -25,6 +26,7 @@ export default function Services() {
   const [loading, setLoading] = useState(true);
   const [pending, setPending] = useState({});
   const [error, setError] = useState('');
+  const [stopTarget, setStopTarget] = useState(null);
 
   async function fetchServices() {
     try {
@@ -44,6 +46,10 @@ export default function Services() {
   }, []);
 
   async function handleAction(name, action) {
+    if (action === 'stop') {
+      setStopTarget(name);
+      return;
+    }
     setPending((p) => ({ ...p, [name]: action }));
     try {
       await serviceAction(name, action);
@@ -53,6 +59,20 @@ export default function Services() {
     } finally {
       setPending((p) => ({ ...p, [name]: null }));
     }
+  }
+
+  async function handleStopConfirm(password) {
+    const name = stopTarget;
+    setPending((p) => ({ ...p, [name]: 'stop' }));
+    setStopTarget(null);
+    try {
+      await serviceAction(name, 'stop', password);
+      await fetchServices();
+    } catch (err) {
+      setPending((p) => ({ ...p, [name]: null }));
+      throw err; // re-throw so PasswordModal shows the error
+    }
+    setPending((p) => ({ ...p, [name]: null }));
   }
 
   return (
@@ -103,6 +123,14 @@ export default function Services() {
           </div>
         )}
       </div>
+
+      {stopTarget && (
+        <PasswordModal
+          serviceName={stopTarget}
+          onConfirm={handleStopConfirm}
+          onCancel={() => setStopTarget(null)}
+        />
+      )}
     </div>
   );
 }

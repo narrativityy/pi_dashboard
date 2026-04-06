@@ -1,5 +1,6 @@
 const express = require('express');
 const { execFile } = require('child_process');
+const verifyPassword = require('./verify');
 const router = express.Router();
 
 function getManagedServices() {
@@ -76,6 +77,19 @@ router.post('/:name/:action', async (req, res) => {
 
   if (!['start', 'stop', 'restart'].includes(action)) {
     return res.status(400).json({ error: 'Invalid action' });
+  }
+
+  // Stop requires password re-verification
+  if (action === 'stop') {
+    const { password } = req.body;
+    if (!password) {
+      return res.status(401).json({ error: 'Password required to stop a service' });
+    }
+    try {
+      await verifyPassword(req.user.username, password);
+    } catch {
+      return res.status(401).json({ error: 'Incorrect password' });
+    }
   }
 
   try {

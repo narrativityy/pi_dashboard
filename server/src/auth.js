@@ -1,5 +1,6 @@
 const express = require('express');
 const jwt = require('jsonwebtoken');
+const verifyPassword = require('./verify');
 const router = express.Router();
 
 const COOKIE_NAME = 'pi_dashboard_token';
@@ -9,25 +10,6 @@ const COOKIE_OPTIONS = {
   maxAge: 1000 * 60 * 60 * 8, // 8 hours
 };
 
-const AUTH_MODE = process.env.AUTH_MODE || 'static';
-
-function authenticateStatic(username, password) {
-  return (
-    username === process.env.DASHBOARD_USER &&
-    password === process.env.DASHBOARD_PASS
-  );
-}
-
-function authenticatePam(username, password) {
-  const pam = require('authenticate-pam');
-  return new Promise((resolve, reject) => {
-    pam.authenticate(username, password, (err) => {
-      if (err) reject(err);
-      else resolve();
-    }, { serviceName: 'login', remoteHost: 'localhost' });
-  });
-}
-
 router.post('/login', async (req, res) => {
   const { username, password } = req.body;
   if (!username || !password) {
@@ -35,18 +17,10 @@ router.post('/login', async (req, res) => {
   }
 
   try {
-    if (AUTH_MODE === 'pam') {
-      await authenticatePam(username, password);
-    } else {
-      if (!authenticateStatic(username, password)) {
-        return res.status(401).json({ error: 'Invalid credentials' });
-      }
-    }
-
+    await verifyPassword(username, password);
     const token = jwt.sign({ username }, process.env.SESSION_SECRET, {
       expiresIn: '8h',
     });
-
     res.cookie(COOKIE_NAME, token, COOKIE_OPTIONS);
     res.json({ ok: true });
   } catch {

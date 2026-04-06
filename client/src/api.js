@@ -42,11 +42,14 @@ export async function getServices() {
   return res.json();
 }
 
-export async function serviceAction(name, action) {
+export async function serviceAction(name, action, password = null) {
   const res = await fetch(`/api/services/${name}/${action}`, {
     method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
     credentials: 'include',
+    body: JSON.stringify(password ? { password } : {}),
   });
-  if (!res.ok) throw new Error(`Failed to ${action} ${name}`);
-  return res.json();
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || `Failed to ${action} ${name}`);
+  return data;
 }
