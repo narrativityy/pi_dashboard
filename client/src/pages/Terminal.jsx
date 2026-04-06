@@ -63,9 +63,11 @@ export default function Terminal() {
   }, []);
 
   return (
-    <div className="terminal-page">
+    <div className="dashboard">
       <Header />
-      <div ref={containerRef} className="terminal-container" />
+      <div className="terminal-main">
+        <div ref={containerRef} className="terminal-container" />
+      </div>
     </div>
   );
 }

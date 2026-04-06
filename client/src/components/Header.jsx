@@ -6,6 +6,16 @@ import { useStats } from '../context/StatsContext';
 const STATUS_COLOR = { connected: '#22c55e', connecting: '#facc15', disconnected: '#f87171' };
 const STATUS_LABEL = { connected: 'Live', connecting: 'Connecting…', disconnected: 'Disconnected' };
 
+const NAV_LINKS = [
+  { to: '/dashboard', label: 'Dashboard' },
+  { to: '/services',  label: 'Services'  },
+  { to: '/processes', label: 'Processes' },
+  { to: '/files',     label: 'Files'     },
+  { to: '/wifi',      label: 'WiFi'      },
+  { to: '/terminal',  label: 'Terminal'  },
+  { to: '/system',    label: 'System'    },
+];
+
 export default function Header() {
   const navigate = useNavigate();
   const { tempUnit, toggleTempUnit } = usePrefs();
@@ -17,32 +27,22 @@ export default function Header() {
   }
 
   return (
-    <header className="dashboard-header">
-      <h1>Pi Dashboard</h1>
-      <nav className="nav">
-        <NavLink to="/dashboard" className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}>
-          Dashboard
-        </NavLink>
-        <NavLink to="/services" className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}>
-          Services
-        </NavLink>
-        <NavLink to="/terminal" className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}>
-          Terminal
-        </NavLink>
-        <NavLink to="/processes" className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}>
-          Processes
-        </NavLink>
-        <NavLink to="/wifi" className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}>
-          WiFi
-        </NavLink>
-        <NavLink to="/files" className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}>
-          Files
-        </NavLink>
-        <NavLink to="/system" className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}>
-          System
-        </NavLink>
+    <aside className="sidebar">
+      <div className="sidebar-brand">Pi Dashboard</div>
+
+      <nav className="sidebar-nav">
+        {NAV_LINKS.map(({ to, label }) => (
+          <NavLink
+            key={to}
+            to={to}
+            className={({ isActive }) => 'nav-link' + (isActive ? ' active' : '')}
+          >
+            {label}
+          </NavLink>
+        ))}
       </nav>
-      <div className="header-actions">
+
+      <div className="sidebar-footer">
         <span className="ws-status" title={STATUS_LABEL[wsStatus]}>
           <span className="ws-dot" style={{ background: STATUS_COLOR[wsStatus] }} />
           {STATUS_LABEL[wsStatus]}
@@ -52,6 +52,6 @@ export default function Header() {
         </button>
         <button className="logout-btn" onClick={handleLogout}>Log out</button>
       </div>
-    </header>
+    </aside>
   );
 }
