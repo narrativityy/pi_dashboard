@@ -68,9 +68,30 @@ PORT=3001
 
 ### Prerequisites
 
-- Node.js 18+
-- npm
-- Raspberry Pi running Linux (developed for Pi Zero 2W / Pi 4)
+**System packages**
+
+The default Raspberry Pi OS repos ship an outdated version of Node.js. Install via NodeSource to get 18+:
+
+```bash
+curl -fsSL https://deb.nodesource.com/setup_18.x | sudo -E bash -
+sudo apt install -y nodejs
+```
+
+Everything else you need:
+
+```bash
+sudo apt install -y git build-essential python3
+```
+
+| Package | Why |
+|---|---|
+| `nodejs` (18+) | runtime for the server |
+| `npm` | comes bundled with Node.js |
+| `git` | clone the repo |
+| `build-essential` | compiles native modules (needed for the terminal feature) |
+| `python3` | required by node-gyp for native module compilation |
+
+> The dashboard and stats features work without `build-essential` and `python3`. You only need those when adding the web terminal (node-pty requires a native compile step).
 
 ### Install
 
