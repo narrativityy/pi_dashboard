@@ -22,8 +22,7 @@ A self-hosted web dashboard for Raspberry Pi devices. Monitor system health, vie
 | System Stats | systeminformation |
 | History | better-sqlite3 (SQLite) |
 | Charts | recharts |
-| Auth (current) | Static credentials via `.env` + JWT httpOnly cookie |
-| Auth (future) | PAM — authenticate against real Linux users on the host |
+| Auth | Static credentials via `.env` or PAM (real Linux users) |
 
 ## Project Structure
 
@@ -140,7 +139,9 @@ sudo apt install -y git build-essential python3 libpam0g-dev
 
 ```bash
 git clone <repo-url> pi_dashboard
-cd pi_dashboard/server && npm install
+cd pi_dashboard
+npm install
+cd server && npm install
 cd ../client && npm install
 ```
 
@@ -222,6 +223,11 @@ sudo journalctl -u pi-dashboard-update.service -n 20 --no-pager
 Trigger a manual update at any time:
 ```bash
 cd ~/Documents/pi_dashboard && ./update.sh
+```
+
+**Note:** `update.sh` calls `sudo systemctl restart pi-dashboard`. For the timer to run this without prompting for a password, add a sudoers rule:
+```bash
+echo "pi ALL=(ALL) NOPASSWD: /bin/systemctl restart pi-dashboard" | sudo tee /etc/sudoers.d/pi-dashboard
 ```
 
 ## API Routes
