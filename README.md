@@ -1,23 +1,23 @@
 # Pi Dashboard
 
-A self-hosted web dashboard for Raspberry Pi devices. Provides a browser-based interface for monitoring system health and accessing a live terminal — accessible from any device on your local network.
+A self-hosted web dashboard for Raspberry Pi devices. Monitor system health and access a live terminal from any browser on your local network.
 
 ## Features
 
 - **Login** — session-gated access via username/password
-- **System Dashboard** — real-time CPU temperature, clock speeds, CPU/memory/disk usage, uptime, and more
-- **Web Terminal** — a full in-browser terminal session powered by xterm.js and node-pty
+- **System Dashboard** — real-time CPU load, temperature, clock speed, memory, disk usage, and uptime (updates every 3 seconds)
+- **Web Terminal** — full in-browser terminal session *(coming soon)*
 
 ## Tech Stack
 
 | Layer | Technology |
 |---|---|
 | Frontend | React (Vite) |
-| Backend | Node.js, Express |
-| Terminal | node-pty + WebSockets (ws) |
+| Backend | Node.js, Express 4 |
+| Terminal | node-pty + WebSockets (ws) *(coming soon)* |
 | System Stats | systeminformation |
-| Auth (MVP) | Static credentials via environment variable |
-| Auth (future) | PAM — authenticate against real Linux users on the host device |
+| Auth (MVP) | Static credentials via `.env` + JWT httpOnly cookie |
+| Auth (future) | PAM — authenticate against real Linux users on the host |
 
 ## Project Structure
 
@@ -26,42 +26,43 @@ pi_dashboard/
 ├── client/                 # React frontend
 │   ├── src/
 │   │   ├── App.jsx
+│   │   ├── api.js              # fetch wrappers for all API calls
+│   │   ├── index.css
 │   │   ├── pages/
 │   │   │   ├── Login.jsx
 │   │   │   └── Dashboard.jsx
 │   │   └── components/
-│   │       ├── SystemStats.jsx
-│   │       └── Terminal.jsx
+│   │       ├── ProtectedRoute.jsx
+│   │       └── Terminal.jsx        # (coming soon)
 │   ├── index.html
 │   ├── vite.config.js
 │   └── package.json
-├── server/                 # Node.js backend
+├── server/
 │   ├── src/
-│   │   ├── index.js        # Entry point, Express + WebSocket server
-│   │   ├── auth.js         # Login route + session handling
-│   │   ├── stats.js        # System metrics API routes
-│   │   └── terminal.js     # node-pty WebSocket handler
+│   │   ├── index.js        # Express entry point
+│   │   ├── auth.js         # /api/auth routes + JWT logic
+│   │   ├── middleware.js   # requireAuth middleware
+│   │   ├── stats.js        # /api/stats route
+│   │   └── terminal.js     # node-pty WebSocket handler (coming soon)
+│   ├── .env                # credentials — do not commit
 │   └── package.json
-├── start.sh                # Manual start script (starts both client and server)
+├── start.sh                # production start script
+├── pi-dashboard.service    # systemd unit file
 └── README.md
 ```
 
 ## Authentication
 
-### MVP
-Credentials are set via environment variables. The login page accepts a username and password, which are checked against these values server-side. A session token is issued on success and required for all subsequent API calls and the WebSocket terminal connection.
+Credentials are set in `server/.env`. On login the server issues a signed JWT stored as an httpOnly cookie — it's required for all API calls and the terminal WebSocket connection.
 
-```bash
-DASHBOARD_USER=admin
+```
+DASHBOARD_USER=youruser
 DASHBOARD_PASS=yourpassword
+SESSION_SECRET=a-long-random-string
+PORT=3001
 ```
 
-### Future: PAM Authentication
-The goal is to support real Linux user authentication using the host device's PAM stack. This means any user account on the Pi can log in with their actual system password — no configuration needed. This makes the project portable: anyone can clone it, run it, and sign in with their existing Linux credentials.
-
-This will be implemented using the `authenticate-pam` Node.js package, which wraps the system's PAM libraries. Requires the server process to run with sufficient privileges (or a small setuid helper) to authenticate against `/etc/shadow`.
-
-> **Note:** Even with PAM auth enabled, this login only gates access to the dashboard. It does not create a process running as that user — the terminal session still runs as the user that started the server process.
+> **Future:** PAM authentication via `authenticate-pam` so any Linux user account on the host can log in with their system password. The login still only gates dashboard access — the terminal runs as whichever user started the server.
 
 ## Getting Started
 
@@ -69,82 +70,87 @@ This will be implemented using the `authenticate-pam` Node.js package, which wra
 
 - Node.js 18+
 - npm
-- Raspberry Pi running Linux (tested on Pi Zero 2W, Pi 4)
+- Raspberry Pi running Linux (developed for Pi Zero 2W / Pi 4)
 
 ### Install
 
 ```bash
 git clone <repo-url> pi_dashboard
-cd pi_dashboard
-
-# Install server dependencies
-cd server && npm install
-
-# Install client dependencies
+cd pi_dashboard/server && npm install
 cd ../client && npm install
 ```
 
 ### Configure
 
-Create a `.env` file in `server/`:
+```bash
+cp server/.env.example server/.env
+# edit server/.env with your credentials
+```
+
+Or create `server/.env` manually:
 
 ```
-DASHBOARD_USER=admin
+DASHBOARD_USER=youruser
 DASHBOARD_PASS=yourpassword
-SESSION_SECRET=changeme
+SESSION_SECRET=a-long-random-string
 PORT=3001
 ```
 
-### Run (Development)
+### Development
+
+Runs the frontend (port 5173) and backend (port 3001) separately. Vite proxies `/api` requests to the backend so there are no CORS issues.
 
 ```bash
-# From the project root
+# from project root
+npm run dev
+```
+
+Or individually:
+```bash
+npm run dev:client
+npm run dev:server
+```
+
+### Production (on the Pi)
+
+`start.sh` builds the React app and starts the server in production mode. Everything is served from a single port.
+
+```bash
 ./start.sh
 ```
 
-The frontend dev server runs on `http://localhost:5173` and the backend API on `http://localhost:3001`. Access the dashboard from any device on your local network using your Pi's IP address.
+Then open `http://<pi-ip>:3001` from any device on your network.
 
-### Run (Production)
-
-Build the frontend and serve it statically from the backend:
+### Auto-start on Boot
 
 ```bash
-cd client && npm run build
+# edit pi-dashboard.service — update User and WorkingDirectory to match your install path
+sudo cp pi-dashboard.service /etc/systemd/system/
+sudo systemctl enable pi-dashboard
+sudo systemctl start pi-dashboard
 ```
 
-Then configure the server to serve `client/dist/` and run:
-
+Check status with:
 ```bash
-cd server && node src/index.js
+sudo systemctl status pi-dashboard
 ```
 
-The entire app is then available on a single port (default: `3001`).
+## API Routes
 
-## Auto-start on Boot (systemd)
-
-To have the dashboard start automatically when the Pi boots:
-
-1. Copy the example service file:
-   ```bash
-   sudo cp pi-dashboard.service /etc/systemd/system/
-   ```
-2. Edit it to match your install path and user.
-3. Enable and start the service:
-   ```bash
-   sudo systemctl enable pi-dashboard
-   sudo systemctl start pi-dashboard
-   ```
+| Method | Path | Auth | Description |
+|---|---|---|---|
+| POST | `/api/auth/login` | — | Log in, sets JWT cookie |
+| POST | `/api/auth/logout` | — | Clears JWT cookie |
+| GET | `/api/auth/verify` | — | Check if session is valid |
+| GET | `/api/stats` | required | System metrics snapshot |
 
 ## Roadmap
 
-- [x] Project structure and planning
-- [ ] Backend: Express server + session auth (MVP static credentials)
-- [ ] Backend: System stats API (`/api/stats`)
-- [ ] Backend: WebSocket terminal handler (node-pty)
-- [ ] Frontend: Login page
-- [ ] Frontend: Dashboard with live system stats
-- [ ] Frontend: Terminal page (xterm.js)
-- [ ] Production build + single-port serving
-- [ ] systemd service file
-- [ ] PAM authentication support
-- [ ] Multi-session terminal support
+- [x] Project structure
+- [x] Auth — JWT httpOnly cookie, login/logout/verify
+- [x] Stats API — CPU, temperature, memory, disk, uptime
+- [x] Dashboard UI — live stat cards, 3s polling
+- [x] Production build — single port, static frontend served from Express
+- [x] systemd service file
+- [ ] Web terminal (xterm.js + node-pty)
+- [ ] PAM authentication
