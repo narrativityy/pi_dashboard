@@ -23,3 +23,9 @@ export async function verify() {
   if (!res.ok) throw new Error('Not authenticated');
   return res.json();
 }
+
+export async function getStats() {
+  const res = await fetch('/api/stats', { credentials: 'include' });
+  if (!res.ok) throw new Error('Failed to fetch stats');
+  return res.json();
+}
