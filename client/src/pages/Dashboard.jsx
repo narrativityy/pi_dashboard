@@ -58,43 +58,43 @@ export default function Dashboard() {
   return (
     <div className="dashboard">
       <Header />
-
-      {error && <p className="error">{error}</p>}
-
-      {!stats ? (
-        <p className="loading">Loading...</p>
-      ) : (
-        <div className="stat-grid">
-          <StatCard
-            label="CPU Load"
-            value={`${stats.cpu.load}%`}
-            sub={`${stats.cpu.cores} cores · ${stats.cpu.speed} GHz`}
-            percent={stats.cpu.load}
-          />
-          <StatCard
-            label="Temperature"
-            value={stats.temperature.main !== null ? `${stats.temperature.main}°C` : 'N/A'}
-          />
-          <StatCard
-            label="Memory"
-            value={`${stats.memory.percent}%`}
-            sub={`${formatBytes(stats.memory.used)} / ${formatBytes(stats.memory.total)}`}
-            percent={stats.memory.percent}
-          />
-          {stats.disk && (
+      <div className="dashboard-content">
+        {error && <p className="error">{error}</p>}
+        {!stats ? (
+          <p className="loading">Loading...</p>
+        ) : (
+          <div className="stat-grid">
             <StatCard
-              label="Disk"
-              value={`${stats.disk.percent}%`}
-              sub={`${formatBytes(stats.disk.used)} / ${formatBytes(stats.disk.size)} (${stats.disk.mount})`}
-              percent={stats.disk.percent}
+              label="CPU Load"
+              value={`${stats.cpu.load}%`}
+              sub={`${stats.cpu.cores} cores · ${stats.cpu.speed} GHz`}
+              percent={stats.cpu.load}
             />
-          )}
-          <StatCard
-            label="Uptime"
-            value={formatUptime(stats.uptime)}
-          />
-        </div>
-      )}
+            <StatCard
+              label="Temperature"
+              value={stats.temperature.main !== null ? `${stats.temperature.main}°C` : 'N/A'}
+            />
+            <StatCard
+              label="Memory"
+              value={`${stats.memory.percent}%`}
+              sub={`${formatBytes(stats.memory.used)} / ${formatBytes(stats.memory.total)}`}
+              percent={stats.memory.percent}
+            />
+            {stats.disk && (
+              <StatCard
+                label="Disk"
+                value={`${stats.disk.percent}%`}
+                sub={`${formatBytes(stats.disk.used)} / ${formatBytes(stats.disk.size)} (${stats.disk.mount})`}
+                percent={stats.disk.percent}
+              />
+            )}
+            <StatCard
+              label="Uptime"
+              value={formatUptime(stats.uptime)}
+            />
+          </div>
+        )}
+      </div>
     </div>
   );
 }

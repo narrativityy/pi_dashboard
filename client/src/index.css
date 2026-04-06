@@ -62,13 +62,17 @@ body {
 .login-form button:hover:not(:disabled) { background: #4f52c9; }
 
 /* Dashboard */
-.dashboard { padding: 24px; max-width: 960px; margin: 0 auto; }
+.dashboard { max-width: 960px; margin: 0 auto; }
+
+.dashboard-content { padding: 24px; }
 
 .dashboard-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 28px;
+  padding: 16px 24px;
+  margin-bottom: 0;
+  border-bottom: 1px solid #2d3148;
 }
 
 .dashboard-header h1 { font-size: 1.5rem; }
