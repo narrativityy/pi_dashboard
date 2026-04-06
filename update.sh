@@ -13,6 +13,17 @@ fi
 
 echo "New changes found, updating..."
 git pull origin main
-./start.sh
+
+mkdir -p "$SCRIPT_DIR/data"
+
+echo "Building client..."
+cd client && npm install && npm run build
+cd "$SCRIPT_DIR"
+
+echo "Installing server dependencies..."
+cd server && npm install --omit=dev
+cd "$SCRIPT_DIR"
+
+echo "Restarting service..."
 sudo systemctl restart pi-dashboard
 echo "Update complete."
