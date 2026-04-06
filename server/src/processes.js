@@ -3,13 +3,18 @@ const si = require('systeminformation');
 const verifyPassword = require('./verify');
 const router = express.Router();
 
+// Transient processes spawned by systeminformation itself — exclude them
+const SI_ARTIFACTS = new Set(['ps', 'grep', 'wmic']);
+
 // GET /api/processes
 router.get('/', async (req, res) => {
   try {
     const data = await si.processes();
-    const top = data.list
+    const all = data.list.filter((p) => !SI_ARTIFACTS.has(p.name));
+    const total = all.length;
+    const top = all
       .sort((a, b) => b.cpu - a.cpu)
-      .slice(0, 30)
+      .slice(0, 50)
       .map(({ pid, name, user, cpu, mem, command }) => ({
         pid,
         name,
@@ -18,7 +23,7 @@ router.get('/', async (req, res) => {
         mem: Math.round(mem * 10) / 10,
         command,
       }));
-    res.json(top);
+    res.json({ total, list: top });
   } catch (err) {
     res.status(500).json({ error: String(err) });
   }

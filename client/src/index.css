@@ -794,44 +794,84 @@ body {
 
 .danger-btn-shutdown:hover { border-color: #ef4444; color: #ef4444; }
 
-/* Processes table */
-.processes-wrapper {
-  overflow-x: auto;
+/* Processes */
+.proc-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
 }
+
+.proc-count {
+  font-size: 0.75rem;
+  color: #475569;
+  white-space: nowrap;
+}
+
+.proc-search {
+  margin-left: auto;
+  padding: 6px 12px;
+  background: #1a1d27;
+  border: 1px solid #2d3148;
+  border-radius: 7px;
+  color: #e2e8f0;
+  font-size: 0.8rem;
+  outline: none;
+  width: 220px;
+}
+
+.proc-search:focus { border-color: #6366f1; }
+
+.processes-wrapper { overflow-x: auto; }
 
 .processes-table {
   width: 100%;
   border-collapse: collapse;
-  font-size: 0.875rem;
+  font-size: 0.8rem;
 }
 
 .processes-table th {
   text-align: left;
   padding: 8px 12px;
-  font-size: 0.72rem;
+  font-size: 0.7rem;
   text-transform: uppercase;
   letter-spacing: 0.08em;
-  color: #64748b;
+  color: #475569;
   border-bottom: 1px solid #2d3148;
+  white-space: nowrap;
 }
 
+.proc-th-sortable {
+  cursor: pointer;
+  user-select: none;
+}
+
+.proc-th-sortable:hover { color: #94a3b8; }
+
+.sort-icon { margin-left: 4px; font-size: 0.65rem; }
+.sort-icon-idle { opacity: 0.3; }
+.sort-icon-active { opacity: 1; }
+
 .processes-table td {
-  padding: 8px 12px;
-  border-bottom: 1px solid #1e2235;
+  padding: 7px 12px;
+  border-bottom: 1px solid #13151f;
   color: #e2e8f0;
 }
 
 .processes-table tbody tr:hover td { background: #1a1d27; }
 
-.proc-pid { font-family: ui-monospace, monospace; color: #64748b; }
-.proc-name { font-weight: 500; }
+.proc-pid { font-family: ui-monospace, monospace; color: #475569; font-size: 0.75rem; }
+.proc-name { font-weight: 500; color: #e2e8f0; }
 .proc-user { color: #64748b; }
+
+.proc-col-cmd { width: 99%; }
 
 .proc-command {
   font-family: ui-monospace, monospace;
-  font-size: 0.75rem;
-  color: #64748b;
-  max-width: 260px;
+  font-size: 0.72rem;
+  color: #475569;
+  max-width: 300px;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;

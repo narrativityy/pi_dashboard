@@ -69,7 +69,7 @@ export async function systemAction(action, password) {
 export async function getProcesses() {
   const res = await fetch('/api/processes', { credentials: 'include' });
   if (!res.ok) throw new Error('Failed to fetch processes');
-  return res.json();
+  return res.json(); // { total, list }
 }
 
 export async function killProcess(pid, password) {
