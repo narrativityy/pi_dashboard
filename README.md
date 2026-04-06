@@ -225,9 +225,16 @@ Trigger a manual update at any time:
 cd ~/Documents/pi_dashboard && ./update.sh
 ```
 
-**Note:** `update.sh` calls `sudo systemctl restart pi-dashboard`. For the timer to run this without prompting for a password, add a sudoers rule:
+**Note:** Several dashboard actions need `sudo` without a password prompt. Create a sudoers file covering all of them:
 ```bash
-echo "pi ALL=(ALL) NOPASSWD: /bin/systemctl restart pi-dashboard" | sudo tee /etc/sudoers.d/pi-dashboard
+sudo tee /etc/sudoers.d/pi-dashboard << 'EOF'
+pi ALL=(ALL) NOPASSWD: /bin/systemctl restart pi-dashboard
+pi ALL=(ALL) NOPASSWD: /bin/systemctl start *
+pi ALL=(ALL) NOPASSWD: /bin/systemctl stop *
+pi ALL=(ALL) NOPASSWD: /bin/systemctl restart *
+pi ALL=(ALL) NOPASSWD: /sbin/reboot
+pi ALL=(ALL) NOPASSWD: /sbin/shutdown
+EOF
 ```
 
 ## API Routes
@@ -239,6 +246,14 @@ echo "pi ALL=(ALL) NOPASSWD: /bin/systemctl restart pi-dashboard" | sudo tee /et
 | GET | `/api/auth/verify` | — | Check if session is valid |
 | GET | `/api/stats` | required | Live system metrics snapshot |
 | GET | `/api/stats/history` | required | Last 24 hours of logged stats |
+| GET | `/api/services` | required | List managed systemd services |
+| POST | `/api/services/:name/:action` | required | start/restart (free), stop (password required) |
+| GET | `/api/services/:name/logs` | required | Last 100 journalctl lines for a service |
+| GET | `/api/system/info` | required | OS, kernel, CPU, RAM, uptime |
+| POST | `/api/system/reboot` | required | Reboot device (password required) |
+| POST | `/api/system/shutdown` | required | Shutdown device (password required) |
+| GET | `/api/processes` | required | Top 30 processes by CPU usage |
+| POST | `/api/processes/:pid/kill` | required | SIGTERM a process (password required) |
 
 ## Roadmap
 
@@ -254,4 +269,10 @@ echo "pi ALL=(ALL) NOPASSWD: /bin/systemctl restart pi-dashboard" | sudo tee /et
 - [x] systemd service — auto-start on boot
 - [x] systemd timer — auto-update from GitHub every 5 minutes
 - [x] PAM authentication — real Linux user login via AUTH_MODE=pam
+- [x] Service manager — list, start, restart, stop systemd services with auth
+- [x] Service logs — journalctl output per service in a modal
+- [x] Network info — hostname, IP, interface, rx/tx bytes
+- [x] System info — OS, kernel, CPU, RAM, uptime
+- [x] System controls — password-gated reboot and shutdown
+- [x] Process manager — top 30 processes by CPU, kill with auth
 - [ ] WiFi hotspot mode — USB dongle as AP, onboard WiFi for internet

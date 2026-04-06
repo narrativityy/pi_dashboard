@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 
-export default function PasswordModal({ serviceName, onConfirm, onCancel }) {
+export default function PasswordModal({ serviceName, prompt, onConfirm, onCancel }) {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -33,7 +33,7 @@ export default function PasswordModal({ serviceName, onConfirm, onCancel }) {
           <button className="modal-close" onClick={onCancel}>✕</button>
         </div>
         <p className="modal-desc">
-          Enter your password to stop <strong>{serviceName}</strong>.
+          {prompt || <>Enter your password to stop <strong>{serviceName}</strong>.</>}
         </p>
         <form onSubmit={handleSubmit}>
           <input

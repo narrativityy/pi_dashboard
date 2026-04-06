@@ -24,6 +24,12 @@ export default function Header() {
         <NavLink to="/terminal" className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}>
           Terminal
         </NavLink>
+        <NavLink to="/processes" className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}>
+          Processes
+        </NavLink>
+        <NavLink to="/system" className={({ isActive }) => isActive ? 'nav-link active' : 'nav-link'}>
+          System
+        </NavLink>
       </nav>
       <div className="header-actions">
         <button className="unit-toggle" onClick={toggleTempUnit}>

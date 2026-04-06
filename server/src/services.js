@@ -67,6 +67,30 @@ router.get('/', async (req, res) => {
   res.json(results);
 });
 
+// GET /api/services/:name/logs
+router.get('/:name/logs', async (req, res) => {
+  const { name } = req.params;
+  if (!isAllowed(name)) {
+    return res.status(403).json({ error: 'Service not in managed list' });
+  }
+  const lines = Math.min(parseInt(req.query.lines, 10) || 100, 500);
+  try {
+    const output = await new Promise((resolve, reject) => {
+      execFile(
+        'journalctl',
+        ['-u', name, '-n', String(lines), '--no-pager', '--output=short-precise'],
+        (err, stdout) => {
+          if (err) reject(err);
+          else resolve(stdout);
+        }
+      );
+    });
+    res.json({ logs: output.split('\n').filter(Boolean) });
+  } catch (err) {
+    res.status(500).json({ error: String(err) });
+  }
+});
+
 // POST /api/services/:name/:action
 router.post('/:name/:action', async (req, res) => {
   const { name, action } = req.params;

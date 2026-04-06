@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { getServices, serviceAction } from '../api';
 import Header from '../components/Header';
 import PasswordModal from '../components/PasswordModal';
+import LogModal from '../components/LogModal';
 
 const STATE_COLORS = {
   active: '#22c55e',
@@ -27,6 +28,7 @@ export default function Services() {
   const [pending, setPending] = useState({});
   const [error, setError] = useState('');
   const [stopTarget, setStopTarget] = useState(null);
+  const [logTarget, setLogTarget] = useState(null);
 
   async function fetchServices() {
     try {
@@ -97,6 +99,12 @@ export default function Services() {
                 </div>
                 <div className="service-actions">
                   <button
+                    className="svc-btn svc-btn-logs"
+                    onClick={() => setLogTarget(svc.name)}
+                  >
+                    Logs
+                  </button>
+                  <button
                     className="svc-btn svc-btn-start"
                     disabled={svc.activeState === 'active' || !!pending[svc.name]}
                     onClick={() => handleAction(svc.name, 'start')}
@@ -130,6 +138,9 @@ export default function Services() {
           onConfirm={handleStopConfirm}
           onCancel={() => setStopTarget(null)}
         />
+      )}
+      {logTarget && (
+        <LogModal serviceName={logTarget} onClose={() => setLogTarget(null)} />
       )}
     </div>
   );
