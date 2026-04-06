@@ -1,0 +1,12 @@
+[Unit]
+Description=Pi Dashboard updater
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+User=pi
+WorkingDirectory=/home/pi/Documents/pi_dashboard
+ExecStart=/bin/bash /home/pi/Documents/pi_dashboard/update.sh
+StandardOutput=journal
+StandardError=journal
