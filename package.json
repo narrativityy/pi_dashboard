@@ -1,0 +1,27 @@
+{
+  "name": "pi_dashboard",
+  "version": "1.0.0",
+  "description": "A self-hosted web dashboard for Raspberry Pi devices. Provides a browser-based interface for monitoring system health and accessing a live terminal — accessible from any device on your local network.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "dev": "concurrently \"npm run dev --prefix server\" \"npm run dev --prefix client\"",
+    "dev:server": "npm run dev --prefix server",
+    "dev:client": "npm run dev --prefix client"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/narrativityy/pi_dashboard.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/narrativityy/pi_dashboard/issues"
+  },
+  "homepage": "https://github.com/narrativityy/pi_dashboard#readme",
+  "devDependencies": {
+    "concurrently": "^9.2.1"
+  }
+}
