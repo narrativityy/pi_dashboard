@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import { logout } from '../api';
 import { usePrefs } from '../context/PrefsContext';
@@ -20,28 +21,28 @@ export default function Header() {
   const navigate = useNavigate();
   const { tempUnit, toggleTempUnit } = usePrefs();
   const { wsStatus } = useStats();
+  const [open, setOpen] = useState(false);
 
   async function handleLogout() {
     await logout();
     navigate('/login');
   }
 
-  return (
-    <aside className="sidebar">
+  const sidebarContent = (
+    <>
       <div className="sidebar-brand">Pi Dashboard</div>
-
       <nav className="sidebar-nav">
         {NAV_LINKS.map(({ to, label }) => (
           <NavLink
             key={to}
             to={to}
             className={({ isActive }) => 'nav-link' + (isActive ? ' active' : '')}
+            onClick={() => setOpen(false)}
           >
             {label}
           </NavLink>
         ))}
       </nav>
-
       <div className="sidebar-footer">
         <span className="ws-status" title={STATUS_LABEL[wsStatus]}>
           <span className="ws-dot" style={{ background: STATUS_COLOR[wsStatus] }} />
@@ -52,6 +53,27 @@ export default function Header() {
         </button>
         <button className="logout-btn" onClick={handleLogout}>Log out</button>
       </div>
-    </aside>
+    </>
+  );
+
+  return (
+    <>
+      {/* Mobile top bar */}
+      <div className="mobile-topbar">
+        <button className="hamburger" onClick={() => setOpen(true)} aria-label="Open menu">
+          <span /><span /><span />
+        </button>
+        <span className="mobile-title">Pi Dashboard</span>
+        <span className="ws-dot" style={{ background: STATUS_COLOR[wsStatus] }} />
+      </div>
+
+      {/* Backdrop */}
+      {open && <div className="sidebar-backdrop" onClick={() => setOpen(false)} />}
+
+      {/* Sidebar */}
+      <aside className={`sidebar${open ? ' sidebar-open' : ''}`}>
+        {sidebarContent}
+      </aside>
+    </>
   );
 }
