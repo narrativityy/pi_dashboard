@@ -1,5 +1,4 @@
 const jwt = require('jsonwebtoken');
-const { WebSocketServer } = require('ws');
 const { COOKIE_NAME } = require('./auth');
 const { getLiveStats } = require('./stats');
 
@@ -12,8 +11,7 @@ function parseCookies(cookieHeader = '') {
   );
 }
 
-function setupStatsWs(server) {
-  const wss = new WebSocketServer({ server, path: '/ws/stats' });
+function setupStatsWs(wss) {
   const clients = new Set();
   let interval = null;
 

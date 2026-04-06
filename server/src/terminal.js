@@ -11,9 +11,7 @@ function parseCookies(cookieHeader = '') {
   );
 }
 
-function setupTerminal(server) {
-  const { WebSocketServer } = require('ws');
-  const wss = new WebSocketServer({ server, path: '/ws/terminal' });
+function setupTerminal(wss) {
 
   wss.on('connection', (ws, req) => {
     // Auth check — verify JWT cookie before spawning a shell

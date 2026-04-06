@@ -10,6 +10,7 @@ const servicesRouter = require('./services');
 const systemRouter = require('./system');
 const processesRouter = require('./processes');
 const wifiRouter = require('./wifi');
+const { WebSocketServer } = require('ws');
 const setupTerminal = require('./terminal');
 const setupStatsWs = require('./statsWs');
 const startCollector = require('./collector');
@@ -34,9 +35,24 @@ app.use('/api/system', requireAuth, systemRouter);
 app.use('/api/processes', requireAuth, processesRouter);
 app.use('/api/wifi', requireAuth, wifiRouter);
 
-// Attach WebSockets to the HTTP server
-setupTerminal(server);
-setupStatsWs(server);
+// Attach WebSockets — use noServer + manual upgrade routing so both
+// paths can coexist on the same HTTP server without handler conflicts.
+const terminalWss = new WebSocketServer({ noServer: true });
+const statsWss = new WebSocketServer({ noServer: true });
+
+server.on('upgrade', (req, socket, head) => {
+  const { pathname } = new URL(req.url, `http://${req.headers.host}`);
+  if (pathname === '/ws/terminal') {
+    terminalWss.handleUpgrade(req, socket, head, (ws) => terminalWss.emit('connection', ws, req));
+  } else if (pathname === '/ws/stats') {
+    statsWss.handleUpgrade(req, socket, head, (ws) => statsWss.emit('connection', ws, req));
+  } else {
+    socket.destroy();
+  }
+});
+
+setupTerminal(terminalWss);
+setupStatsWs(statsWss);
 
 // In production, serve the built React app
 if (IS_PROD) {
