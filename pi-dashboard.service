@@ -8,7 +8,7 @@ User=pi
 SupplementaryGroups=shadow
 WorkingDirectory=/home/pi/Documents/pi_dashboard/server
 Environment=NODE_ENV=production
-ExecStart=/usr/local/bin/node src/index.js
+ExecStart=/usr/bin/node src/index.js
 Restart=on-failure
 RestartSec=5
 
