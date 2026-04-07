@@ -197,8 +197,13 @@ router.post('/connect', async (req, res) => {
       if (internetDevice) upArgs.push('ifname', internetDevice);
       await sudoNmcli(...upArgs);
       return res.json({ ok: true });
-    } catch {
-      // Not a saved connection — fall through to wifi connect
+    } catch (upErr) {
+      // If the saved profile is broken (missing key-mgmt etc.), delete it so
+      // the fresh 'device wifi connect' below can create a clean one.
+      if (String(upErr.message).includes('property is missing')) {
+        try { await sudoNmcli('connection', 'delete', ssid); } catch {}
+      }
+      // Otherwise not a saved connection — fall through to wifi connect
     }
 
     const args = ['device', 'wifi', 'connect', ssid];
@@ -208,6 +213,9 @@ router.post('/connect', async (req, res) => {
     res.json({ ok: true });
   } catch (err) {
     const msg = String(err.message);
+    if (msg.includes('property is missing')) {
+      return res.status(500).json({ error: 'Saved connection profile is corrupt. Try again.' });
+    }
     if (msg.includes('Secrets were required') || msg.includes('password')) {
       return res.status(400).json({ error: 'Incorrect WiFi password' });
     }

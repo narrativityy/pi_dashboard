@@ -79,6 +79,23 @@ The script will:
 4. Create and activate the NetworkManager hotspot connection
 5. Print the dashboard URL to connect to
 
+After running the script, make sure the dashboard sudoers file includes the `nmcli connection delete` rule so the WiFi page can recover from corrupt saved profiles:
+
+```bash
+sudo tee /etc/sudoers.d/pi-dashboard << 'EOF'
+pi ALL=(ALL) NOPASSWD: /bin/systemctl restart pi-dashboard
+pi ALL=(ALL) NOPASSWD: /bin/systemctl start *
+pi ALL=(ALL) NOPASSWD: /bin/systemctl stop *
+pi ALL=(ALL) NOPASSWD: /bin/systemctl restart *
+pi ALL=(ALL) NOPASSWD: /sbin/reboot
+pi ALL=(ALL) NOPASSWD: /sbin/shutdown
+pi ALL=(ALL) NOPASSWD: /usr/bin/nmcli device wifi connect *
+pi ALL=(ALL) NOPASSWD: /usr/bin/nmcli device disconnect *
+pi ALL=(ALL) NOPASSWD: /usr/bin/nmcli connection up *
+pi ALL=(ALL) NOPASSWD: /usr/bin/nmcli connection delete *
+EOF
+```
+
 ---
 
 ## Manual setup
@@ -153,3 +170,19 @@ sudo journalctl -u NetworkManager -n 50 --no-pager
 sudo journalctl -u NetworkManager -n 100 --no-pager | grep -i hostapd
 ```
 Most common cause: another process is holding `wlan1`. Check `nmcli device status`.
+
+**WiFi page shows "No dongle" even though the hotspot is running**
+
+The dashboard detects the hotspot by checking the NM connection profile's wireless mode. If `iw` is not in the node process's PATH, it falls back to querying NM directly. If detection still fails, confirm `iw` is installed:
+```bash
+which iw || sudo apt install -y iw
+```
+Then restart the dashboard: `sudo systemctl restart pi-dashboard`.
+
+**"802-11-wireless-security.key-mgmt: property is missing" when connecting to a network**
+
+This means NM has a saved connection profile for that SSID that's missing its security settings. The dashboard handles this automatically — it detects the error, deletes the corrupt profile, and retries with a clean connection. If you hit it manually from the terminal:
+```bash
+sudo nmcli connection delete "YourSSID"
+sudo nmcli device wifi connect "YourSSID" password "yourpassword" ifname wlan0
+```

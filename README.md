@@ -11,6 +11,13 @@ A self-hosted web dashboard for Raspberry Pi devices. Monitor system health, vie
 - **Stat History** — SQLite-backed logging every 60 seconds, 24-hour retention; sparkline previews on each card, click for a full chart
 - **Temperature Unit Toggle** — switch between °F and °C from the header, defaults to °F, persists across sessions
 - **Web Terminal** — full in-browser terminal session via xterm.js + node-pty
+- **Service Manager** — list, start, restart, and stop systemd services; view live journalctl logs per service
+- **Process Manager** — top 50 processes by CPU with sortable columns, search filter, and authenticated kill
+- **System Info & Controls** — OS, kernel, CPU, RAM, uptime; password-gated reboot and shutdown
+- **WiFi Manager** — scan nearby networks, connect/disconnect; dual-interface support (hotspot + internet) with automatic recovery from corrupt saved profiles
+- **File Browser** — browse, download, and upload files rooted at the Pi's home directory
+- **Connection Status** — live WebSocket status indicator in the sidebar
+- **Sidebar Layout** — collapsible sidebar navigation, mobile-friendly with hamburger menu
 - **Auto-update** — systemd timer checks for new commits every 5 minutes and rebuilds automatically
 
 ## Tech Stack
@@ -38,16 +45,20 @@ pi_dashboard/
 │   │   ├── index.css
 │   │   ├── context/
 │   │   │   └── PrefsContext.jsx      # temperature unit preference (°F/°C)
+│   │   ├── context/
+│   │   │   ├── PrefsContext.jsx      # temperature unit preference (°F/°C)
+│   │   │   └── StatsContext.jsx      # shared WebSocket connection + wsStatus
 │   │   ├── pages/
 │   │   │   ├── Login.jsx
 │   │   │   ├── Dashboard.jsx         # stat cards + sparklines (WebSocket live feed)
 │   │   │   ├── Services.jsx          # systemd service manager + log viewer
 │   │   │   ├── Processes.jsx         # process manager with kill
-│   │   │   ├── Wifi.jsx              # WiFi scan + connect/disconnect
+│   │   │   ├── Wifi.jsx              # WiFi manager — dual-interface hotspot + internet
+│   │   │   ├── Files.jsx             # file browser — list, download, upload
 │   │   │   ├── System.jsx            # system info + reboot/shutdown controls
 │   │   │   └── Terminal.jsx          # xterm.js terminal
 │   │   └── components/
-│   │       ├── Header.jsx            # nav + temp unit toggle + logout
+│   │       ├── Header.jsx            # sidebar nav + WS status + logout
 │   │       ├── ProtectedRoute.jsx    # redirects to /login if no session
 │   │       ├── StatDetail.jsx        # full 24-hour chart modal
 │   │       ├── LogModal.jsx          # journalctl log viewer modal
@@ -60,6 +71,7 @@ pi_dashboard/
 │   │   ├── index.js        # Express + HTTP server entry point
 │   │   ├── auth.js         # /api/auth routes + JWT logic
 │   │   ├── middleware.js   # requireAuth middleware
+│   │   ├── verify.js       # verifyPassword() shared helper (static + PAM)
 │   │   ├── stats.js        # /api/stats routes + getLiveStats() shared function
 │   │   ├── statsWs.js      # /ws/stats WebSocket — pushes live stats every 3s
 │   │   ├── collector.js    # background job — snapshots stats every 60s
@@ -67,7 +79,8 @@ pi_dashboard/
 │   │   ├── services.js     # /api/services routes + journalctl log viewer
 │   │   ├── system.js       # /api/system routes — info, reboot, shutdown
 │   │   ├── processes.js    # /api/processes routes — list + kill
-│   │   ├── wifi.js         # /api/wifi routes — scan, connect, disconnect
+│   │   ├── wifi.js         # /api/wifi routes — dual-interface scan, connect, disconnect
+│   │   ├── files.js        # /api/files routes — browse, download, upload
 │   │   └── terminal.js     # node-pty WebSocket handler (/ws/terminal)
 │   ├── .env                # credentials — do not commit
 │   ├── .env.example
@@ -250,6 +263,7 @@ pi ALL=(ALL) NOPASSWD: /sbin/shutdown
 pi ALL=(ALL) NOPASSWD: /usr/bin/nmcli device wifi connect *
 pi ALL=(ALL) NOPASSWD: /usr/bin/nmcli device disconnect *
 pi ALL=(ALL) NOPASSWD: /usr/bin/nmcli connection up *
+pi ALL=(ALL) NOPASSWD: /usr/bin/nmcli connection delete *
 EOF
 ```
 
@@ -268,12 +282,15 @@ EOF
 | GET | `/api/system/info` | required | OS, kernel, CPU, RAM, uptime |
 | POST | `/api/system/reboot` | required | Reboot device (password required) |
 | POST | `/api/system/shutdown` | required | Shutdown device (password required) |
-| GET | `/api/processes` | required | Top 30 processes by CPU usage |
+| GET | `/api/processes` | required | Top 50 processes by CPU usage |
 | POST | `/api/processes/:pid/kill` | required | SIGTERM a process (password required) |
-| GET | `/api/wifi/status` | required | Current WiFi connection status |
-| GET | `/api/wifi/networks` | required | Scan and list nearby networks |
+| GET | `/api/wifi/status` | required | Current WiFi status — both interfaces (internet + hotspot) |
+| GET | `/api/wifi/networks` | required | Scan and list nearby networks (managed interface only) |
 | POST | `/api/wifi/connect` | required | Connect to a network |
 | POST | `/api/wifi/disconnect` | required | Disconnect from current network |
+| GET | `/api/files` | required | List directory contents |
+| GET | `/api/files/download` | required | Download a file |
+| POST | `/api/files/upload` | required | Upload a file |
 | WS | `/ws/stats` | required | Live stats pushed every 3s |
 | WS | `/ws/terminal` | required | Interactive shell session |
 
@@ -296,7 +313,11 @@ EOF
 - [x] Network info — hostname, IP, interface, rx/tx bytes
 - [x] System info — OS, kernel, CPU, RAM, uptime
 - [x] System controls — password-gated reboot and shutdown
-- [x] Process manager — top 30 processes by CPU, kill with auth
-- [x] WiFi manager — scan networks, connect/disconnect via nmcli
+- [x] Process manager — top 50 processes by CPU, sortable columns, search filter, kill with auth
+- [x] WiFi manager — scan networks, connect/disconnect via nmcli, recovers from corrupt saved profiles
 - [x] Real-time stats — WebSocket push replaces HTTP polling on dashboard
 - [x] Portable hotspot — USB dongle as AP, onboard WiFi for internet (see [docs/hotspot-setup.md](docs/hotspot-setup.md))
+- [x] Dual-interface WiFi — separate hotspot and internet cards, hotspot SSID filtered from scan list
+- [x] File browser — browse, download, upload files from the Pi's home directory
+- [x] Connection status indicator — live WebSocket status in sidebar
+- [x] Sidebar layout — collapsible sidebar nav, mobile-friendly with hamburger menu
