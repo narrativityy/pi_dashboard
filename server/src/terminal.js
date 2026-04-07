@@ -33,7 +33,7 @@ function setupTerminal(wss) {
     // Spawn shell
     const shell = process.env.SHELL || '/bin/bash';
     const ptyProcess = pty.spawn(shell, [], {
-      name: 'xterm-color',
+      name: 'xterm-256color',
       cols: 80,
       rows: 24,
       cwd: process.env.HOME,
