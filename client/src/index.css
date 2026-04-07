@@ -725,6 +725,87 @@ body {
   text-align: right;
 }
 
+/* WiFi dual-interface cards */
+.wifi-iface-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+@media (max-width: 640px) {
+  .wifi-iface-grid { grid-template-columns: 1fr; }
+}
+
+.wifi-iface-card {
+  background: #1a1d27;
+  border: 1px solid #2d3148;
+  border-radius: 12px;
+  padding: 18px 20px;
+}
+
+.wifi-iface-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 14px;
+}
+
+.wifi-iface-label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #94a3b8;
+}
+
+.wifi-badge {
+  font-size: 0.68rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: 2px 8px;
+  border-radius: 99px;
+}
+
+.badge-green {
+  color: #22c55e;
+  background: #22c55e22;
+}
+
+.badge-dim {
+  color: #64748b;
+  background: #64748b18;
+}
+
+.wifi-iface-body { display: flex; flex-direction: column; gap: 8px; }
+
+.wifi-iface-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.wifi-iface-key {
+  font-size: 0.8rem;
+  color: #64748b;
+  flex-shrink: 0;
+}
+
+.wifi-iface-val {
+  font-size: 0.85rem;
+  color: #e2e8f0;
+  font-family: ui-monospace, monospace;
+  text-align: right;
+  word-break: break-all;
+}
+
+.wifi-iface-empty {
+  font-size: 0.85rem;
+  color: #64748b;
+  margin: 0;
+}
+
 /* Log modal */
 .modal-logs { max-width: 860px; }
 

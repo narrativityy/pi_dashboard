@@ -83,7 +83,7 @@ function ConnectModal({ network, onConfirm, onCancel }) {
 }
 
 export default function Wifi() {
-  const [status, setStatus] = useState(null);
+  const [status, setStatus] = useState(null);   // { internet, hotspot }
   const [networks, setNetworks] = useState([]);
   const [loading, setLoading] = useState(true);
   const [scanning, setScanning] = useState(false);
@@ -106,9 +106,7 @@ export default function Wifi() {
     }
   }
 
-  useEffect(() => {
-    fetchAll();
-  }, []);
+  useEffect(() => { fetchAll(); }, []);
 
   async function handleRescan() {
     setScanning(true);
@@ -140,47 +138,110 @@ export default function Wifi() {
     }
   }
 
+  const { internet, hotspot } = status || {};
+
   return (
     <div className="dashboard">
       <Header />
       <div className="dashboard-content">
 
-        <div className="wifi-header-row">
-          <h2 className="section-title" style={{ marginBottom: 0 }}>WiFi</h2>
+        <h2 className="section-title">WiFi</h2>
+
+        {error && <p className="error" style={{ marginBottom: '16px' }}>{error}</p>}
+
+        {/* Interface status cards */}
+        <div className="wifi-iface-grid">
+
+          {/* Hotspot card */}
+          <div className="wifi-iface-card">
+            <div className="wifi-iface-header">
+              <span className="wifi-iface-label">Hotspot</span>
+              {hotspot ? (
+                <span className={`wifi-badge ${hotspot.active ? 'badge-green' : 'badge-dim'}`}>
+                  {hotspot.active ? 'Active' : 'Inactive'}
+                </span>
+              ) : (
+                <span className="wifi-badge badge-dim">No dongle</span>
+              )}
+            </div>
+
+            {hotspot ? (
+              <div className="wifi-iface-body">
+                <div className="wifi-iface-row">
+                  <span className="wifi-iface-key">Interface</span>
+                  <span className="wifi-iface-val">{hotspot.device}</span>
+                </div>
+                <div className="wifi-iface-row">
+                  <span className="wifi-iface-key">SSID</span>
+                  <span className="wifi-iface-val">{hotspot.ssid || '—'}</span>
+                </div>
+                <div className="wifi-iface-row">
+                  <span className="wifi-iface-key">IP Address</span>
+                  <span className="wifi-iface-val">{hotspot.ip || '—'}</span>
+                </div>
+              </div>
+            ) : (
+              <p className="wifi-iface-empty">USB WiFi dongle not detected.</p>
+            )}
+          </div>
+
+          {/* Internet card */}
+          <div className="wifi-iface-card">
+            <div className="wifi-iface-header">
+              <span className="wifi-iface-label">Internet</span>
+              {internet ? (
+                <span className={`wifi-badge ${internet.connected ? 'badge-green' : 'badge-dim'}`}>
+                  {internet.connected ? 'Connected' : 'Disconnected'}
+                </span>
+              ) : (
+                <span className="wifi-badge badge-dim">No interface</span>
+              )}
+            </div>
+
+            {internet ? (
+              <div className="wifi-iface-body">
+                <div className="wifi-iface-row">
+                  <span className="wifi-iface-key">Interface</span>
+                  <span className="wifi-iface-val">{internet.device}</span>
+                </div>
+                <div className="wifi-iface-row">
+                  <span className="wifi-iface-key">SSID</span>
+                  <span className="wifi-iface-val">{internet.ssid || '—'}</span>
+                </div>
+                <div className="wifi-iface-row">
+                  <span className="wifi-iface-key">IP Address</span>
+                  <span className="wifi-iface-val">{internet.ip || '—'}</span>
+                </div>
+                {internet.connected && (
+                  <div style={{ marginTop: '12px' }}>
+                    <button
+                      className="svc-btn svc-btn-stop"
+                      onClick={handleDisconnect}
+                      disabled={disconnecting}
+                      style={{ width: '100%' }}
+                    >
+                      {disconnecting ? 'Disconnecting...' : 'Disconnect'}
+                    </button>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <p className="wifi-iface-empty">No managed WiFi interface found.</p>
+            )}
+          </div>
+
+        </div>
+
+        {/* Available networks */}
+        <div className="wifi-header-row" style={{ marginTop: '28px' }}>
+          <h3 className="section-title" style={{ marginBottom: 0, fontSize: '1rem' }}>
+            Available Networks
+          </h3>
           <button className="svc-btn" onClick={handleRescan} disabled={scanning || loading}>
             {scanning ? 'Scanning...' : 'Scan'}
           </button>
         </div>
 
-        {error && <p className="error" style={{ marginTop: '12px' }}>{error}</p>}
-
-        {/* Current connection */}
-        {status && (
-          <div className="wifi-status-card">
-            <div className="wifi-status-left">
-              <div className="wifi-status-label">
-                {status.connected ? 'Connected' : 'Not connected'}
-              </div>
-              {status.connected && (
-                <>
-                  <div className="wifi-status-ssid">{status.ssid}</div>
-                  {status.ip && <div className="wifi-status-ip">{status.ip}</div>}
-                </>
-              )}
-            </div>
-            {status.connected && (
-              <button
-                className="svc-btn svc-btn-stop"
-                onClick={handleDisconnect}
-                disabled={disconnecting}
-              >
-                {disconnecting ? '...' : 'Disconnect'}
-              </button>
-            )}
-          </div>
-        )}
-
-        {/* Network list */}
         {loading ? (
           <p className="loading" style={{ marginTop: '16px' }}>Loading...</p>
         ) : (
@@ -202,7 +263,15 @@ export default function Wifi() {
                   </div>
                 </div>
                 <div className="wifi-signal-pct">{net.signal}%</div>
-                {!net.connected && (
+                {net.connected ? (
+                  <button
+                    className="svc-btn svc-btn-stop"
+                    onClick={handleDisconnect}
+                    disabled={disconnecting}
+                  >
+                    {disconnecting ? '...' : 'Disconnect'}
+                  </button>
+                ) : (
                   <button
                     className="svc-btn svc-btn-start"
                     disabled={pendingSsid === net.ssid}
@@ -215,6 +284,7 @@ export default function Wifi() {
             ))}
           </div>
         )}
+
       </div>
 
       {connectTarget && (
