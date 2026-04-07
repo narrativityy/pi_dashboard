@@ -40,16 +40,31 @@ function signalBars(signal) {
 
 // Returns { wlan0: 'managed', wlan1: 'AP', ... } using iw dev
 async function getIfaceModes() {
-  const out = await run('iw', ['dev']);
-  const modes = {};
-  let current = null;
-  for (const line of out.split('\n')) {
-    const m = line.match(/Interface\s+(\S+)/);
-    if (m) current = m[1];
-    const t = line.match(/type\s+(\S+)/);
-    if (t && current) modes[current] = t[1]; // 'managed', 'AP', 'monitor', etc.
+  try {
+    const out = await run('iw', ['dev']);
+    const modes = {};
+    let current = null;
+    for (const line of out.split('\n')) {
+      const m = line.match(/Interface\s+(\S+)/);
+      if (m) current = m[1];
+      const t = line.match(/type\s+(\S+)/);
+      if (t && current) modes[current] = t[1]; // 'managed', 'AP', 'monitor', etc.
+    }
+    return modes;
+  } catch {
+    return {};
   }
-  return modes;
+}
+
+// Fallback: check NM connection profile to see if it's an AP (802-11-wireless.mode: ap)
+async function isNmConnectionAP(connectionName) {
+  if (!connectionName || connectionName === '--') return false;
+  try {
+    const out = await nmcli('-t', '-f', '802-11-wireless.mode', 'connection', 'show', connectionName);
+    return /:\s*ap\s*$/im.test(out);
+  } catch {
+    return false;
+  }
 }
 
 async function getDeviceIP(device) {
@@ -85,7 +100,9 @@ async function getWifiRoles() {
 
   for (const [device, , state, connection] of wifiDevices) {
     const mode = modes[device];
-    if (mode === 'AP') {
+    // iw dev reports 'AP' for NM-managed hotspots; fall back to checking the NM profile
+    const isAP = mode === 'AP' || (mode === undefined && await isNmConnectionAP(connection));
+    if (isAP) {
       // Hotspot — get SSID from NM connection profile
       let ssid = connection;
       try {
@@ -120,18 +137,14 @@ router.get('/status', async (req, res) => {
 // GET /api/wifi/networks?rescan=true
 router.get('/networks', async (req, res) => {
   try {
-    const modes = await getIfaceModes();
+    const { internet, hotspot } = await getWifiRoles();
 
     // Scan only on the managed (internet) interface
-    const internetDevice = Object.entries(modes).find(([, m]) => m === 'managed')?.[0];
+    const internetDevice = internet?.device || null;
     const hotspotSsids = new Set();
 
-    // Collect hotspot SSIDs so we can hide them from the scan list
-    const apDevices = Object.entries(modes).filter(([, m]) => m === 'AP').map(([d]) => d);
-    for (const dev of apDevices) {
-      const ssid = await getConnectedSSID(dev).catch(() => null);
-      if (ssid) hotspotSsids.add(ssid);
-    }
+    // Hide the hotspot's own SSID from the scan list
+    if (hotspot?.ssid) hotspotSsids.add(hotspot.ssid);
 
     const rescan = req.query.rescan === 'true' ? 'yes' : 'auto';
     const args = ['-t', '-f', 'IN-USE,SSID,SIGNAL,SECURITY', 'device', 'wifi', 'list', '--rescan', rescan];
@@ -175,8 +188,8 @@ router.post('/connect', async (req, res) => {
   if (!ssid) return res.status(400).json({ error: 'SSID required' });
 
   try {
-    const modes = await getIfaceModes();
-    const internetDevice = Object.entries(modes).find(([, m]) => m === 'managed')?.[0];
+    const { internet } = await getWifiRoles();
+    const internetDevice = internet?.device || null;
 
     // Try bringing up a saved connection first
     try {
@@ -208,8 +221,8 @@ router.post('/connect', async (req, res) => {
 // POST /api/wifi/disconnect
 router.post('/disconnect', async (req, res) => {
   try {
-    const modes = await getIfaceModes();
-    const internetDevice = Object.entries(modes).find(([, m]) => m === 'managed')?.[0];
+    const { internet } = await getWifiRoles();
+    const internetDevice = internet?.device || null;
     if (!internetDevice) return res.status(404).json({ error: 'No internet WiFi interface found' });
     await sudoNmcli('device', 'disconnect', internetDevice);
     res.json({ ok: true });
