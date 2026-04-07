@@ -45,8 +45,11 @@ async function getIfaceModes() {
     const modes = {};
     let current = null;
     for (const line of out.split('\n')) {
+      // Unnamed/non-netdev blocks (e.g. P2P-device) have no Interface line;
+      // reset current so their 'type' field doesn't overwrite the previous iface.
+      if (line.includes('non-netdev')) { current = null; continue; }
       const m = line.match(/Interface\s+(\S+)/);
-      if (m) current = m[1];
+      if (m) { current = m[1]; continue; }
       const t = line.match(/type\s+(\S+)/);
       if (t && current) modes[current] = t[1]; // 'managed', 'AP', 'monitor', etc.
     }
