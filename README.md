@@ -2,6 +2,8 @@
 
 A self-hosted web dashboard for Raspberry Pi devices. Monitor system health, view historical stats, and access a live terminal from any browser on your local network.
 
+> **Taking the Pi somewhere?** See [docs/hotspot-setup.md](docs/hotspot-setup.md) to set up a USB WiFi dongle as a portable access point — join the Pi's own network, configure WiFi through the dashboard, and go.
+
 ## Features
 
 - **Login** — session-gated access via username/password, JWT stored as an httpOnly cookie
@@ -297,3 +299,4 @@ EOF
 - [x] Process manager — top 30 processes by CPU, kill with auth
 - [x] WiFi manager — scan networks, connect/disconnect via nmcli
 - [x] Real-time stats — WebSocket push replaces HTTP polling on dashboard
+- [x] Portable hotspot — USB dongle as AP, onboard WiFi for internet (see [docs/hotspot-setup.md](docs/hotspot-setup.md))
